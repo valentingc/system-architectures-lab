@@ -13,7 +13,8 @@ public class PushPipelineFactory {
         // TODO 1. perform model-view transformation from model to VIEW SPACE coordinates
         ModelViewTransformationFilter modelViewTransform =
             new ModelViewTransformationFilter(
-                pd.getModelTranslation()
+                pd.getModelTranslation(),
+                pd.getViewTransform()
             );
 
 
