@@ -2,14 +2,22 @@ package at.fhv.sysarch.lab1.pipeline;
 
 import at.fhv.sysarch.lab1.animation.AnimationRenderer;
 import at.fhv.sysarch.lab1.obj.Model;
+import at.fhv.sysarch.lab1.pipeline.filter.ModelViewTransformationFilter;
 import javafx.animation.AnimationTimer;
 
 public class PushPipelineFactory {
     public static AnimationTimer createPipeline(PipelineData pd) {
+
         // TODO: push from the source (model)
 
         // TODO 1. perform model-view transformation from model to VIEW SPACE coordinates
+        ModelViewTransformationFilter modelViewTransform =
+            new ModelViewTransformationFilter(
+                pd.getModelTranslation()
+            );
 
+
+        // MAYBE we need this somewhere..?? -> pd.getModelRotAxis();
         // TODO 2. perform backface culling in VIEW SPACE
 
         // TODO 3. perform depth sorting in VIEW SPACE
