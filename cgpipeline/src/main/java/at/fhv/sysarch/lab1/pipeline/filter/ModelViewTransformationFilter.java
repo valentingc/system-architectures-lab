@@ -34,7 +34,9 @@ public class ModelViewTransformationFilter implements PushFilter<Face, Face> {
     public void write(Face input) {
         // TODO: transform the model
         Mat4 rotationMatrix = Matrices.rotate((float) 0.01, new Vec3(0,1,0));
+        Mat4 newMatrix = this.viewTransform.multiply(rotationMatrix);
 
+        //Face result = new Face()
         // viewTransform X rotationmatrix = output ???
         // replace face v1-4 with output v1-v4???
         this.outboundPipeline.write(input);
