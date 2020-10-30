@@ -41,6 +41,21 @@ public class PullPipelineFactory {
              */
             @Override
             protected void render(float fraction, Model model) {
+                pd.getGraphicsContext().setStroke(pd.getModelColor());
+                model.getFaces().forEach(face -> {
+                    double[] x = new double[] {
+                        face.getV1().getX() * 100 + 400,
+                        face.getV2().getX() * 100 + 400,
+                        face.getV3().getX() * 100 + 400
+                    };
+                    double[] y = new double[] {
+                        face.getV1().getY() * -100 + 400,
+                        face.getV2().getY() * -100 + 400,
+                        face.getV3().getY() * -100 + 400
+                    };
+                    pd.getGraphicsContext().strokePolygon(x,y,x.length);
+                });
+
                 // TODO compute rotation in radians
 
                 // TODO create new model rotation matrix using pd.getModelRotAxis and Matrices.rotate
