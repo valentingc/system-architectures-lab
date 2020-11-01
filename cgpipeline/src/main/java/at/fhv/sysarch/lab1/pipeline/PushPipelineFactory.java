@@ -4,10 +4,7 @@ import at.fhv.sysarch.lab1.animation.AnimationRenderer;
 import at.fhv.sysarch.lab1.obj.Face;
 import at.fhv.sysarch.lab1.obj.Model;
 import at.fhv.sysarch.lab1.pipeline.data.Pair;
-import at.fhv.sysarch.lab1.pipeline.filter.BackfaceCullingFilter;
-import at.fhv.sysarch.lab1.pipeline.filter.ColorFilter;
-import at.fhv.sysarch.lab1.pipeline.filter.ModelViewTransformationFilter;
-import at.fhv.sysarch.lab1.pipeline.filter.PushDataSink;
+import at.fhv.sysarch.lab1.pipeline.filter.*;
 import at.fhv.sysarch.lab1.pipeline.pipes.PushPipe;
 import com.hackoeur.jglm.Mat4;
 import com.hackoeur.jglm.Matrices;
@@ -26,27 +23,36 @@ public class PushPipelineFactory {
         PushPipe<Face> modelViewToBackfacePipe = new PushPipe<>(backfaceCullingFilter);
         modelViewFilter.setOutboundPipeline(modelViewToBackfacePipe);
 
-        // TODO 3. perform depth sorting in VIEW SPACE
+        // 3. perform depth sorting in VIEW SPACE
+        // NOT POSSIBLE WITH A PUSH PIPELINE
 
         // 4. add coloring (space unimportant)
         ColorFilter colorFilter = new ColorFilter(pd);
-        PushPipe<Face> depthSortingToColor = new PushPipe<>(colorFilter);
-        backfaceCullingFilter.setOutboundPipeline(depthSortingToColor);
+        PushPipe<Face> depthSortingToColorPipe = new PushPipe<>(colorFilter);
+        backfaceCullingFilter.setOutboundPipeline(depthSortingToColorPipe);
 
         // lighting can be switched on/off
+        PerspectiveProjectionFilter perspectiveProjectionFilter = new PerspectiveProjectionFilter(pd);
         if (pd.isPerformLighting()) {
             // 4a. TODO perform lighting in VIEW SPACE
 
-            // 5. TODO perform projection transformation on VIEW SPACE coordinates
+            // 5. perform projection transformation on VIEW SPACE coordinates
+            PushPipe<Pair<Face, Color>> lightingToPerspectivePipe = new PushPipe<>(perspectiveProjectionFilter);
+            colorFilter.setOutboundPipeline(lightingToPerspectivePipe); // TODO
         } else {
-            // 5. TODO perform projection transformation
+            // 5. perform projection transformation
+            PushPipe<Pair<Face, Color>> colorToPerspectivePipe = new PushPipe<>(perspectiveProjectionFilter);
+            colorFilter.setOutboundPipeline(colorToPerspectivePipe);
         }
 
-        // TODO 6. perform perspective division to screen coordinates
+        // 6. perform perspective division to screen coordinates
+        ScreenSpaceTransformationFilter screenSpaceTransformationFilter = new ScreenSpaceTransformationFilter(pd);
+        PushPipe<Pair<Face, Color>> lightingToScreenSpacePipe = new PushPipe<>(screenSpaceTransformationFilter);
+        perspectiveProjectionFilter.setOutboundPipeline(lightingToScreenSpacePipe);
 
         // 7. feed into the sink (renderer)
         PushPipe<Pair<Face, Color>> toSinkPipe = new PushPipe<>(new PushDataSink(pd));
-        colorFilter.setOutboundPipeline(toSinkPipe); // TODO - Update last filter when ready
+        screenSpaceTransformationFilter.setOutboundPipeline(toSinkPipe);
 
         // returning an animation renderer which handles clearing of the
         // viewport and computation of the praction
