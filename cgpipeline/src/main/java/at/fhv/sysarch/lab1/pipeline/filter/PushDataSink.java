@@ -29,7 +29,7 @@ public class PushDataSink implements PushFilter<Face, Face> {
 
     @Override
     public void write(Face face) {
-        pd.getGraphicsContext().setStroke(pd.getModelColor());
+
         Vec2 x1Screen = face.getV1().toScreen();
         Vec2 x2Screen = face.getV2().toScreen();
         Vec2 x3Screen = face.getV3().toScreen();
@@ -49,7 +49,23 @@ public class PushDataSink implements PushFilter<Face, Face> {
 //        double[] y = new double[] {x1Screen.getY() * -100 + 400, x2Screen.getY() * -100 + 400,
 //            x3Screen.getY() * -100 + 400};
 
-        pd.getGraphicsContext().strokePolygon(x,y,x.length);
+
+
+        pd.getGraphicsContext().setStroke(pd.getModelColor());
+        pd.getGraphicsContext().setFill(pd.getModelColor());
+        switch (pd.getRenderingMode()) {
+            case POINT:
+                pd.getGraphicsContext().fillOval(x[0],y[0],5,5);
+                break;
+            case FILLED:
+                pd.getGraphicsContext().fillPolygon(x,y,x.length);
+                pd.getGraphicsContext().strokePolygon(x,y,x.length);
+                //filled is twice
+                break;
+            case WIREFRAME:
+                pd.getGraphicsContext().strokePolygon(x,y,x.length);
+                break;
+        }
         return;
     }
 }
