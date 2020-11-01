@@ -9,6 +9,7 @@ import at.fhv.sysarch.lab1.pipeline.pipes.Pipe;
 import at.fhv.sysarch.lab1.pipeline.pipes.PushPipe;
 import com.hackoeur.jglm.Mat4;
 import com.hackoeur.jglm.Matrices;
+import com.hackoeur.jglm.Vec4;
 import javafx.animation.AnimationTimer;
 
 public class PushPipelineFactory {
@@ -17,6 +18,17 @@ public class PushPipelineFactory {
         // TODO: push from the source (model)
 
         // TODO 1. perform model-view transformation from model to VIEW SPACE coordinates
+
+        PushPipe<Face> pipeToSink = new PushPipe<>(new PushDataSink(pd));
+
+        ModelViewTransformationFilter modelViewFilter =
+            new ModelViewTransformationFilter(
+                pd.getModelTranslation(),
+                pd.getViewTransform(),
+                pd
+            );
+        modelViewFilter.setOutboundPipeline(pipeToSink);
+
 
         // MAYBE we need this somewhere..?? -> pd.getModelRotAxis();
         // TODO 2. perform backface culling in VIEW SPACE
@@ -50,22 +62,6 @@ public class PushPipelineFactory {
              */
             @Override
             protected void render(float fraction, Model model) {
-
-                pd.getGraphicsContext().setStroke(pd.getModelColor());
-                model.getFaces().forEach(face -> {
-                    double[] x = new double[] {
-                        face.getV1().getX() * 100 + 400,
-                        face.getV2().getX() * 100 + 400,
-                        face.getV3().getX() * 100 + 400
-                    };
-                    double[] y = new double[] {
-                        face.getV1().getY() * -100 + 400,
-                        face.getV2().getY() * -100 + 400,
-                        face.getV3().getY() * -100 + 400
-                    };
-                    pd.getGraphicsContext().strokePolygon(x, y, x.length);
-                });
-
                 // TODO compute rotation in radians
                 // 2 PI = 360°
                 double radiant = fraction % (2 * Math.PI);
@@ -76,24 +72,19 @@ public class PushPipelineFactory {
                 Mat4 rotationMatrix = Matrices.rotate((float) radiant, pd.getModelRotAxis());
 
                 // TODO compute updated model-view tranformation
-                Mat4 modelToViewTransform = pd.getModelTranslation();
-                Mat4 viewTransform = pd.getViewTransform();
+
 
                 // MODEL X ROTATE
-                Mat4 modelTransform = modelToViewTransform.multiply(rotationMatrix);
+                Mat4 modelTranslation = pd.getModelTranslation();
+                Mat4 viewTransFormation = pd.getViewTransform();
+
+                Mat4 modelTransform = rotationMatrix.multiply(modelTranslation);
 
                 // TODO update model-view filter
-                ModelViewTransformationFilter modelViewFilter =
-                    new ModelViewTransformationFilter(
-                        modelTransform,
-                        viewTransform
-                    );
+                modelViewFilter.setModelTransform(modelTransform);
 
                 // TODO trigger rendering of the pipeline
                 PushPipe<Face> pipe = new PushPipe<>(modelViewFilter);
-                modelViewFilter.setOutboundPipeline(pipe);
-                pipe.setNextFilter(new PushDataSink());
-
                 model.getFaces().forEach(pipe::write);
             }
         };
