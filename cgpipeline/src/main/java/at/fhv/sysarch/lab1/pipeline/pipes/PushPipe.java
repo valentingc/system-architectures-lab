@@ -6,7 +6,7 @@ import at.fhv.sysarch.lab1.pipeline.filter.PushFilter;
  * @author Valentin Goronjic
  * @author Dominic Luidold
  */
-public class PushPipe<T> {
+public class PushPipe<T> implements Pipe<T> {
     private PushFilter<T, ?> nextFilter;
 
     public PushPipe(PushFilter<T, ?> nextFilter) {

@@ -10,7 +10,7 @@ public interface Pipe<T> {
 
     void write(T data);
 
-    PushFilter<T, T> getNextFilter();
+    PushFilter<T, ?> getNextFilter();
 
-    void setNextFilter(PushFilter<T, T> nextFilter);
+    void setNextFilter(PushFilter<T, ?> nextFilter);
 }

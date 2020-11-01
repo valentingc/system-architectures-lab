@@ -2,45 +2,25 @@ package at.fhv.sysarch.lab1.pipeline.filter;
 
 import at.fhv.sysarch.lab1.obj.Face;
 import at.fhv.sysarch.lab1.pipeline.PipelineData;
-import at.fhv.sysarch.lab1.pipeline.data.Pair;
 import at.fhv.sysarch.lab1.pipeline.pipes.PushPipe;
 import com.hackoeur.jglm.Mat4;
-import javafx.scene.paint.Color;
 
 /**
  * @author Valentin Goronjic
  * @author Dominic Luidold
  */
-public class ModelViewTransformationFilter implements PushFilter<Pair<Face, Color>, Pair<Face, Color>> {
-    private PushPipe<Pair<Face, Color>> outboundPipeline;
-    private PipelineData pipelineData;
+public class ModelViewTransformationFilter implements PushFilter<Face, Face> {
+    private final PipelineData pipelineData;
+    private PushPipe<Face> outboundPipeline;
     private Mat4 viewTransform;
-    private Face face;
 
-    public ModelViewTransformationFilter(Mat4 viewTransform, PipelineData pipelineData) {
-        this.viewTransform = viewTransform;
+    public ModelViewTransformationFilter(PipelineData pipelineData) {
         this.pipelineData = pipelineData;
     }
 
     @Override
-    public void setOutboundPipeline(PushPipe<Pair<Face, Color>> pipe) {
-        this.outboundPipeline = pipe;
-    }
-
-    @Override
-    public PushPipe<Pair<Face, Color>> getOutboundPipeline() {
-        return this.outboundPipeline;
-    }
-
-    @Override
-    public Pair<Face, Color> process(Pair<Face, Color> input) {
-        return input;
-    }
-
-    @Override
-    public void write(Pair<Face, Color> input) {
-        Pair<Face, Color> result = process(input);
-        this.face = result.fst();
+    public void write(Face input) {
+        Face result = process(input);
 
         // TODO: transform the model
 //        Mat4 faceMat4 = new Mat4(face.getV1(), face.getV2(), face.getV3(), new Vec4(0,0,0,1));
@@ -83,12 +63,22 @@ public class ModelViewTransformationFilter implements PushFilter<Pair<Face, Colo
         }
     }
 
-    public Mat4 getViewTransform() {
-        return viewTransform;
+    @Override
+    public Face process(Face input) {
+        return input;
+    }
+
+    @Override
+    public PushPipe<Face> getOutboundPipeline() {
+        return this.outboundPipeline;
+    }
+
+    @Override
+    public void setOutboundPipeline(PushPipe<Face> pipe) {
+        this.outboundPipeline = pipe;
     }
 
     public void setViewTransform(Mat4 viewTransform) {
         this.viewTransform = viewTransform;
     }
-
 }

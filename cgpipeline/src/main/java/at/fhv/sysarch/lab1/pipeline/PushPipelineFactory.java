@@ -5,6 +5,7 @@ import at.fhv.sysarch.lab1.obj.Face;
 import at.fhv.sysarch.lab1.obj.Model;
 import at.fhv.sysarch.lab1.pipeline.data.Pair;
 import at.fhv.sysarch.lab1.pipeline.filter.BackfaceCullingFilter;
+import at.fhv.sysarch.lab1.pipeline.filter.ColorFilter;
 import at.fhv.sysarch.lab1.pipeline.filter.ModelViewTransformationFilter;
 import at.fhv.sysarch.lab1.pipeline.filter.PushDataSink;
 import at.fhv.sysarch.lab1.pipeline.pipes.PushPipe;
@@ -18,16 +19,19 @@ public class PushPipelineFactory {
         // TODO: push from the source (model)
 
         // 1. perform model-view transformation from model to VIEW SPACE coordinates
-        ModelViewTransformationFilter modelViewFilter = new ModelViewTransformationFilter(pd.getViewTransform(), pd);
+        ModelViewTransformationFilter modelViewFilter = new ModelViewTransformationFilter(pd);
 
         // 2. perform backface culling in VIEW SPACE
         BackfaceCullingFilter backfaceCullingFilter = new BackfaceCullingFilter(pd);
-        PushPipe<Pair<Face, Color>> modelViewToBackfacePipe = new PushPipe<>(backfaceCullingFilter);
+        PushPipe<Face> modelViewToBackfacePipe = new PushPipe<>(backfaceCullingFilter);
         modelViewFilter.setOutboundPipeline(modelViewToBackfacePipe);
 
         // TODO 3. perform depth sorting in VIEW SPACE
 
-        // TODO 4. add coloring (space unimportant)
+        // 4. add coloring (space unimportant)
+        ColorFilter colorFilter = new ColorFilter(pd);
+        PushPipe<Face> depthSortingToColor = new PushPipe<>(colorFilter);
+        backfaceCullingFilter.setOutboundPipeline(depthSortingToColor);
 
         // lighting can be switched on/off
         if (pd.isPerformLighting()) {
@@ -41,8 +45,8 @@ public class PushPipelineFactory {
         // TODO 6. perform perspective division to screen coordinates
 
         // 7. feed into the sink (renderer)
-        PushPipe<Pair<Face, Color>> toSinkPipe = new PushPipe<>(new PushDataSink(pd)); // TODO - Update last filter when ready
-        backfaceCullingFilter.setOutboundPipeline(toSinkPipe);
+        PushPipe<Pair<Face, Color>> toSinkPipe = new PushPipe<>(new PushDataSink(pd));
+        colorFilter.setOutboundPipeline(toSinkPipe); // TODO - Update last filter when ready
 
         // returning an animation renderer which handles clearing of the
         // viewport and computation of the praction
@@ -77,7 +81,7 @@ public class PushPipelineFactory {
                 modelViewFilter.setViewTransform(updatedTransformation);
 
                 // trigger rendering of the pipeline
-                PushPipe<Pair<Face, Color>> pipe = new PushPipe<>(modelViewFilter);
+                PushPipe<Face> pipe = new PushPipe<>(modelViewFilter);
                 model.getFaces().forEach(face -> {
                     // Rotate
                     Face rotatedFace = new Face(
@@ -88,7 +92,7 @@ public class PushPipelineFactory {
                             rotationMatrix.multiply(face.getN2()),
                             rotationMatrix.multiply(face.getN3())
                     );
-                    pipe.write(new Pair<>(rotatedFace, pd.getModelColor()));
+                    pipe.write(rotatedFace);
                 });
             }
         };

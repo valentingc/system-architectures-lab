@@ -25,6 +25,8 @@ public class PushDataSink implements PushFilter<Pair<Face, Color>, Pair<Face, Co
     @Override
     public Pair<Face, Color> process(Pair<Face, Color> input) {
         Face face = input.fst();
+        Color color = input.snd();
+
         double[] x = new double[]{
                 face.getV1().getX() * 100 + 400,
                 face.getV2().getX() * 100 + 400,
@@ -36,8 +38,8 @@ public class PushDataSink implements PushFilter<Pair<Face, Color>, Pair<Face, Co
                 face.getV3().getY() * -100 + 400
         };
 
-        pipelineData.getGraphicsContext().setStroke(pipelineData.getModelColor());
-        pipelineData.getGraphicsContext().setFill(pipelineData.getModelColor());
+        pipelineData.getGraphicsContext().setStroke(color);
+        pipelineData.getGraphicsContext().setFill(color);
         switch (pipelineData.getRenderingMode()) {
             case POINT:
                 pipelineData.getGraphicsContext().fillOval(x[0], y[0], 3, 3);

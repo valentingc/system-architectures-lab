@@ -14,5 +14,5 @@ public interface PushFilter<T, S> {
 
     PushPipe<S> getOutboundPipeline();
 
-    void setOutboundPipeline(PushPipe<T> pipe);
+    void setOutboundPipeline(PushPipe<S> pipe);
 }
