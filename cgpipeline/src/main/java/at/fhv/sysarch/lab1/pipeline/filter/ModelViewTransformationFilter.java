@@ -2,6 +2,7 @@ package at.fhv.sysarch.lab1.pipeline.filter;
 
 import at.fhv.sysarch.lab1.obj.Face;
 import at.fhv.sysarch.lab1.pipeline.PipelineData;
+import at.fhv.sysarch.lab1.pipeline.data.Pair;
 import at.fhv.sysarch.lab1.pipeline.pipes.Pipe;
 import at.fhv.sysarch.lab1.pipeline.pipes.PushPipe;
 import at.fhv.sysarch.lab1.utils.MatrixUtils;
@@ -10,12 +11,13 @@ import com.hackoeur.jglm.Mat4;
 import com.hackoeur.jglm.Matrices;
 import com.hackoeur.jglm.Vec3;
 import com.hackoeur.jglm.Vec4;
+import javafx.scene.paint.Color;
 
 /**
  * @author Valentin
  */
-public class ModelViewTransformationFilter implements PushFilter<Face, Face> {
-    private PushPipe<Face> outboundPipeline;
+public class ModelViewTransformationFilter implements PushFilter<Pair<Face, Color>, Pair<Face, Color>> {
+    private PushPipe<Pair<Face, Color>> outboundPipeline;
     private PipelineData pipelineData;
     private Mat4 viewTransform;
     private Face face;
@@ -26,18 +28,18 @@ public class ModelViewTransformationFilter implements PushFilter<Face, Face> {
     }
 
     @Override
-    public void setOutboundPipeline(PushPipe<Face> pipe) {
+    public void setOutboundPipeline(PushPipe<Pair<Face, Color>> pipe) {
         this.outboundPipeline = pipe;
     }
 
     @Override
-    public PushPipe<Face> getOutboundPipeline() {
+    public PushPipe<Pair<Face, Color>> getOutboundPipeline() {
         return this.outboundPipeline;
     }
 
     @Override
-    public void write(Face input) {
-        this.face = input;
+    public void write(Pair<Face, Color> input) {
+        this.face = input.fst();
 
         // TODO: transform the model
 //        Mat4 faceMat4 = new Mat4(face.getV1(), face.getV2(), face.getV3(), new Vec4(0,0,0,1));

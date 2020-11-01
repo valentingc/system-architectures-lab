@@ -2,14 +2,16 @@ package at.fhv.sysarch.lab1.pipeline.filter;
 
 import at.fhv.sysarch.lab1.obj.Face;
 import at.fhv.sysarch.lab1.pipeline.PipelineData;
+import at.fhv.sysarch.lab1.pipeline.data.Pair;
 import at.fhv.sysarch.lab1.pipeline.pipes.PushPipe;
 import com.hackoeur.jglm.Mat4;
+import javafx.scene.paint.Color;
 
 /**
  * @author Valentin
  */
-public class BackfaceCullingFilter implements PushFilter<Face, Face> {
-    private PushPipe<Face> outboundPipeline;
+public class BackfaceCullingFilter implements PushFilter<Pair<Face, Color>, Pair<Face, Color>> {
+    private PushPipe<Pair<Face, Color>> outboundPipeline;
     private PipelineData pipelineData;
 
     public BackfaceCullingFilter(PipelineData pipelineData) {
@@ -17,18 +19,19 @@ public class BackfaceCullingFilter implements PushFilter<Face, Face> {
     }
 
     @Override
-    public void setOutboundPipeline(PushPipe<Face> pipe) {
+    public void setOutboundPipeline(PushPipe<Pair<Face, Color>> pipe) {
         this.outboundPipeline = pipe;
     }
 
     @Override
-    public PushPipe<Face> getOutboundPipeline() {
+    public PushPipe<Pair<Face, Color>> getOutboundPipeline() {
         return this.outboundPipeline;
     }
 
     @Override
-    public void write(Face input) {
-        if (pipelineData.getViewingEye().dot(input.getN1().toVec3()) > 0) {
+    public void write(Pair<Face, Color> input) {
+        Face face = input.fst();
+        if (pipelineData.getViewingEye().dot(face.getN1().toVec3()) > 0) {
             return;
         }
 

@@ -2,14 +2,16 @@ package at.fhv.sysarch.lab1.pipeline.filter;
 
 import at.fhv.sysarch.lab1.obj.Face;
 import at.fhv.sysarch.lab1.pipeline.PipelineData;
+import at.fhv.sysarch.lab1.pipeline.data.Pair;
 import at.fhv.sysarch.lab1.pipeline.pipes.Pipe;
 import at.fhv.sysarch.lab1.pipeline.pipes.PushPipe;
 import com.hackoeur.jglm.Vec2;
+import javafx.scene.paint.Color;
 
 /**
  * @author Valentin
  */
-public class PushDataSink implements PushFilter<Face, Face> {
+public class PushDataSink implements PushFilter<Pair<Face, Color>, Pair<Face, Color>> {
 
     private PipelineData pd;
 
@@ -18,18 +20,18 @@ public class PushDataSink implements PushFilter<Face, Face> {
     }
 
     @Override
-    public void setOutboundPipeline(PushPipe<Face> pipe) {
+    public void setOutboundPipeline(PushPipe<Pair<Face, Color>> pipe) {
         return;
     }
 
     @Override
-    public PushPipe<Face> getOutboundPipeline() {
+    public PushPipe<Pair<Face, Color>> getOutboundPipeline() {
         return null;
     }
 
     @Override
-    public void write(Face face) {
-
+    public void write(Pair<Face, Color> pair) {
+        Face face = pair.fst();
         Vec2 x1Screen = face.getV1().toScreen();
         Vec2 x2Screen = face.getV2().toScreen();
         Vec2 x3Screen = face.getV3().toScreen();

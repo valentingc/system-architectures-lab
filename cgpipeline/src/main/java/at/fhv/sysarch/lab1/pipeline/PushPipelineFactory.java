@@ -3,6 +3,7 @@ package at.fhv.sysarch.lab1.pipeline;
 import at.fhv.sysarch.lab1.animation.AnimationRenderer;
 import at.fhv.sysarch.lab1.obj.Face;
 import at.fhv.sysarch.lab1.obj.Model;
+import at.fhv.sysarch.lab1.pipeline.data.Pair;
 import at.fhv.sysarch.lab1.pipeline.filter.BackfaceCullingFilter;
 import at.fhv.sysarch.lab1.pipeline.filter.ModelViewTransformationFilter;
 import at.fhv.sysarch.lab1.pipeline.filter.PushDataSink;
@@ -12,6 +13,7 @@ import com.hackoeur.jglm.Mat4;
 import com.hackoeur.jglm.Matrices;
 import com.hackoeur.jglm.Vec4;
 import javafx.animation.AnimationTimer;
+import javafx.scene.paint.Color;
 
 public class PushPipelineFactory {
     public static AnimationTimer createPipeline(PipelineData pd) {
@@ -29,10 +31,10 @@ public class PushPipelineFactory {
             );
 
         BackfaceCullingFilter backfaceCullingFilter = new BackfaceCullingFilter(pd);
-        PushPipe<Face> modelViewToBackfacePipe = new PushPipe<>(backfaceCullingFilter);
+        PushPipe<Pair<Face, Color>> modelViewToBackfacePipe = new PushPipe<>(backfaceCullingFilter);
         modelViewFilter.setOutboundPipeline(modelViewToBackfacePipe);
 
-        PushPipe<Face> toSinkPipe = new PushPipe<>(new PushDataSink(pd));
+        PushPipe<Pair<Face, Color>> toSinkPipe = new PushPipe<>(new PushDataSink(pd));
         backfaceCullingFilter.setOutboundPipeline(toSinkPipe);
 
         // MAYBE we need this somewhere..?? -> pd.getModelRotAxis();
@@ -90,7 +92,7 @@ public class PushPipelineFactory {
                 modelViewFilter.setViewTransform(viewTransform);
 
                 // TODO trigger rendering of the pipeline
-                PushPipe<Face> pipe = new PushPipe<>(modelViewFilter);
+                PushPipe<Pair<Face, Color>> pipe = new PushPipe<>(modelViewFilter);
                 model.getFaces().forEach(face -> {
                     // drehen
                     Face newFace = new Face(
@@ -101,7 +103,7 @@ public class PushPipelineFactory {
                         rotationMatrix.multiply(face.getN2()),
                         rotationMatrix.multiply(face.getN3())
                     );
-                    pipe.write(newFace);
+                    pipe.write(new Pair<>(newFace, pd.getModelColor()));
                 });
             }
         };
