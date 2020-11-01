@@ -2,10 +2,6 @@ package at.fhv.sysarch.lab1.pipeline;
 
 import at.fhv.sysarch.lab1.animation.AnimationRenderer;
 import at.fhv.sysarch.lab1.obj.Model;
-import at.fhv.sysarch.lab1.pipeline.filter.ModelViewTransformationFilter;
-import com.hackoeur.jglm.Mat4;
-import com.hackoeur.jglm.Matrices;
-import com.hackoeur.jglm.Vec3;
 import javafx.animation.AnimationTimer;
 
 public class PullPipelineFactory {
@@ -23,7 +19,7 @@ public class PullPipelineFactory {
         // lighting can be switched on/off
         if (pd.isPerformLighting()) {
             // 4a. TODO perform lighting in VIEW SPACE
-            
+
             // 5. TODO perform projection transformation on VIEW SPACE coordinates
         } else {
             // 5. TODO perform projection transformation
@@ -47,14 +43,13 @@ public class PullPipelineFactory {
             protected void render(float fraction, Model model) {
                 // TODO compute rotation in radians
 
-                // TODO create new model rotation matrix using pd.modelRotAxis
+                // TODO create new model rotation matrix using pd.getModelRotAxis and Matrices.rotate
 
                 // TODO compute updated model-view tranformation
 
                 // TODO update model-view filter
 
                 // TODO trigger rendering of the pipeline
-
             }
         };
     }

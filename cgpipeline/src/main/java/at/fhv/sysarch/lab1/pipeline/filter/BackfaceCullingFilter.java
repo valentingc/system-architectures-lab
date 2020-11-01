@@ -4,28 +4,30 @@ import at.fhv.sysarch.lab1.obj.Face;
 import at.fhv.sysarch.lab1.pipeline.PipelineData;
 import at.fhv.sysarch.lab1.pipeline.data.Pair;
 import at.fhv.sysarch.lab1.pipeline.pipes.PushPipe;
-import com.hackoeur.jglm.Mat4;
 import javafx.scene.paint.Color;
 
 /**
- * @author Valentin
+ * @author Valentin Goronjic
+ * @author Dominic Luidold
  */
 public class BackfaceCullingFilter implements PushFilter<Pair<Face, Color>, Pair<Face, Color>> {
+    private final PipelineData pipelineData;
     private PushPipe<Pair<Face, Color>> outboundPipeline;
-    private PipelineData pipelineData;
 
     public BackfaceCullingFilter(PipelineData pipelineData) {
         this.pipelineData = pipelineData;
     }
 
     @Override
-    public void setOutboundPipeline(PushPipe<Pair<Face, Color>> pipe) {
-        this.outboundPipeline = pipe;
-    }
+    public void write(Pair<Face, Color> input) {
+        Pair<Face, Color> result = process(input);
+        if (null == result) {
+            return;
+        }
 
-    @Override
-    public PushPipe<Pair<Face, Color>> getOutboundPipeline() {
-        return this.outboundPipeline;
+        if (null != this.outboundPipeline) {
+            this.outboundPipeline.write(result);
+        }
     }
 
     @Override
@@ -38,15 +40,12 @@ public class BackfaceCullingFilter implements PushFilter<Pair<Face, Color>, Pair
     }
 
     @Override
-    public void write(Pair<Face, Color> input) {
-        Pair<Face, Color> result = process(input);
-        if (result == null) {
-            return;
-        }
-
-        if (this.outboundPipeline != null) {
-            this.outboundPipeline.write(result);
-        }
+    public PushPipe<Pair<Face, Color>> getOutboundPipeline() {
+        return this.outboundPipeline;
     }
 
+    @Override
+    public void setOutboundPipeline(PushPipe<Pair<Face, Color>> pipe) {
+        this.outboundPipeline = pipe;
+    }
 }

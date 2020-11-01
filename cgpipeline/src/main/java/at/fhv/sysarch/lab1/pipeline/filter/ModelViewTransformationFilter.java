@@ -3,18 +3,13 @@ package at.fhv.sysarch.lab1.pipeline.filter;
 import at.fhv.sysarch.lab1.obj.Face;
 import at.fhv.sysarch.lab1.pipeline.PipelineData;
 import at.fhv.sysarch.lab1.pipeline.data.Pair;
-import at.fhv.sysarch.lab1.pipeline.pipes.Pipe;
 import at.fhv.sysarch.lab1.pipeline.pipes.PushPipe;
-import at.fhv.sysarch.lab1.utils.MatrixUtils;
-import com.hackoeur.jglm.Mat3;
 import com.hackoeur.jglm.Mat4;
-import com.hackoeur.jglm.Matrices;
-import com.hackoeur.jglm.Vec3;
-import com.hackoeur.jglm.Vec4;
 import javafx.scene.paint.Color;
 
 /**
- * @author Valentin
+ * @author Valentin Goronjic
+ * @author Dominic Luidold
  */
 public class ModelViewTransformationFilter implements PushFilter<Pair<Face, Color>, Pair<Face, Color>> {
     private PushPipe<Pair<Face, Color>> outboundPipeline;
