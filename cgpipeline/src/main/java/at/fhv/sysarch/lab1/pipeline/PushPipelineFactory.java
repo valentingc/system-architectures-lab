@@ -23,7 +23,6 @@ public class PushPipelineFactory {
 
         ModelViewTransformationFilter modelViewFilter =
             new ModelViewTransformationFilter(
-                pd.getModelTranslation(),
                 pd.getViewTransform(),
                 pd
             );
@@ -54,6 +53,7 @@ public class PushPipelineFactory {
         // viewport and computation of the praction
         return new AnimationRenderer(pd) {
             // TODO rotation variable goes in here
+            float rotation = 0f;
 
             /** This method is called for every frame from the JavaFX Animation
              * system (using an AnimationTimer, see AnimationRenderer). 
@@ -64,7 +64,8 @@ public class PushPipelineFactory {
             protected void render(float fraction, Model model) {
                 // TODO compute rotation in radians
                 // 2 PI = 360°
-                double radiant = fraction % (2 * Math.PI);
+                rotation += fraction;
+                double radiant = rotation % (2 * Math.PI);
 
                 // Calculate rotation matrix
                 // TODO create new model rotation matrix using pd.getModelRotAxis and Matrices.rotate
@@ -72,20 +73,30 @@ public class PushPipelineFactory {
                 Mat4 rotationMatrix = Matrices.rotate((float) radiant, pd.getModelRotAxis());
 
                 // TODO compute updated model-view tranformation
-
-
                 // MODEL X ROTATE
                 Mat4 modelTranslation = pd.getModelTranslation();
                 Mat4 viewTransFormation = pd.getViewTransform();
 
-                Mat4 modelTransform = rotationMatrix.multiply(modelTranslation);
+                Mat4 viewTransform =
+                    viewTransFormation.multiply(modelTranslation).multiply(rotationMatrix);
 
                 // TODO update model-view filter
-                modelViewFilter.setModelTransform(modelTransform);
+                modelViewFilter.setViewTransform(viewTransform);
 
                 // TODO trigger rendering of the pipeline
                 PushPipe<Face> pipe = new PushPipe<>(modelViewFilter);
-                model.getFaces().forEach(pipe::write);
+                model.getFaces().forEach(face -> {
+                    // drehen
+                    Face newFace = new Face(
+                        rotationMatrix.multiply(face.getV1()),
+                        rotationMatrix.multiply(face.getV2()),
+                        rotationMatrix.multiply(face.getV3()),
+                        rotationMatrix.multiply(face.getN1()),
+                        rotationMatrix.multiply(face.getN2()),
+                        rotationMatrix.multiply(face.getN3())
+                    );
+                    pipe.write(newFace);
+                });
             }
         };
     }
