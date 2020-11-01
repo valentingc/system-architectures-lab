@@ -4,6 +4,7 @@ import at.fhv.sysarch.lab1.animation.AnimationRenderer;
 import at.fhv.sysarch.lab1.obj.Face;
 import at.fhv.sysarch.lab1.obj.Model;
 import at.fhv.sysarch.lab1.pipeline.filter.ModelViewTransformationFilter;
+import at.fhv.sysarch.lab1.pipeline.filter.PushDataSink;
 import at.fhv.sysarch.lab1.pipeline.pipes.Pipe;
 import at.fhv.sysarch.lab1.pipeline.pipes.PushPipe;
 import com.hackoeur.jglm.Mat4;
@@ -91,7 +92,7 @@ public class PushPipelineFactory {
                 // TODO trigger rendering of the pipeline
                 PushPipe<Face> pipe = new PushPipe<>(modelViewFilter);
                 modelViewFilter.setOutboundPipeline(pipe);
-                //pipe.setNextFilter(modelViewFilter);
+                pipe.setNextFilter(new PushDataSink());
 
                 model.getFaces().forEach(pipe::write);
             }
