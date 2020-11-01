@@ -39,7 +39,6 @@ public class ModelViewTransformationFilter implements PushFilter<Face, Face> {
     public void write(Face input) {
         this.face = input;
 
-
         // TODO: transform the model
 //        Mat4 faceMat4 = new Mat4(face.getV1(), face.getV2(), face.getV3(), new Vec4(0,0,0,1));
 //        faceMat4 = faceMat4.multiply(viewTransform);

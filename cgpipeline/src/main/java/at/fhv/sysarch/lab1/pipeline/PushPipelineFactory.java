@@ -3,6 +3,7 @@ package at.fhv.sysarch.lab1.pipeline;
 import at.fhv.sysarch.lab1.animation.AnimationRenderer;
 import at.fhv.sysarch.lab1.obj.Face;
 import at.fhv.sysarch.lab1.obj.Model;
+import at.fhv.sysarch.lab1.pipeline.filter.BackfaceCullingFilter;
 import at.fhv.sysarch.lab1.pipeline.filter.ModelViewTransformationFilter;
 import at.fhv.sysarch.lab1.pipeline.filter.PushDataSink;
 import at.fhv.sysarch.lab1.pipeline.pipes.Pipe;
@@ -19,15 +20,20 @@ public class PushPipelineFactory {
 
         // TODO 1. perform model-view transformation from model to VIEW SPACE coordinates
 
-        PushPipe<Face> pipeToSink = new PushPipe<>(new PushDataSink(pd));
+
 
         ModelViewTransformationFilter modelViewFilter =
             new ModelViewTransformationFilter(
                 pd.getViewTransform(),
                 pd
             );
-        modelViewFilter.setOutboundPipeline(pipeToSink);
 
+        BackfaceCullingFilter backfaceCullingFilter = new BackfaceCullingFilter(pd);
+        PushPipe<Face> modelViewToBackfacePipe = new PushPipe<>(backfaceCullingFilter);
+        modelViewFilter.setOutboundPipeline(modelViewToBackfacePipe);
+
+        PushPipe<Face> toSinkPipe = new PushPipe<>(new PushDataSink(pd));
+        backfaceCullingFilter.setOutboundPipeline(toSinkPipe);
 
         // MAYBE we need this somewhere..?? -> pd.getModelRotAxis();
         // TODO 2. perform backface culling in VIEW SPACE
