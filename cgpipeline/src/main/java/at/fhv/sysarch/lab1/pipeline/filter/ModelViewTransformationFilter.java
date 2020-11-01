@@ -38,8 +38,14 @@ public class ModelViewTransformationFilter implements PushFilter<Pair<Face, Colo
     }
 
     @Override
+    public Pair<Face, Color> process(Pair<Face, Color> input) {
+        return input;
+    }
+
+    @Override
     public void write(Pair<Face, Color> input) {
-        this.face = input.fst();
+        Pair<Face, Color> result = process(input);
+        this.face = result.fst();
 
         // TODO: transform the model
 //        Mat4 faceMat4 = new Mat4(face.getV1(), face.getV2(), face.getV3(), new Vec4(0,0,0,1));
@@ -78,7 +84,7 @@ public class ModelViewTransformationFilter implements PushFilter<Pair<Face, Colo
         // replace face v1-4 with output v1-v4???
 
         if (this.outboundPipeline != null) {
-            this.outboundPipeline.write(input);
+            this.outboundPipeline.write(result);
         }
     }
 

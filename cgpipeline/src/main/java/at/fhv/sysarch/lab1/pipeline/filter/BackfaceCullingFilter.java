@@ -29,14 +29,23 @@ public class BackfaceCullingFilter implements PushFilter<Pair<Face, Color>, Pair
     }
 
     @Override
-    public void write(Pair<Face, Color> input) {
+    public Pair<Face, Color> process(Pair<Face, Color> input) {
         Face face = input.fst();
         if (pipelineData.getViewingEye().dot(face.getN1().toVec3()) > 0) {
+            return null;
+        }
+        return input;
+    }
+
+    @Override
+    public void write(Pair<Face, Color> input) {
+        Pair<Face, Color> result = process(input);
+        if (result == null) {
             return;
         }
 
         if (this.outboundPipeline != null) {
-            this.outboundPipeline.write(input);
+            this.outboundPipeline.write(result);
         }
     }
 

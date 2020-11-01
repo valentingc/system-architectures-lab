@@ -9,6 +9,8 @@ public interface PushFilter<T1, T2> {
     void setOutboundPipeline(PushPipe<T1> pipe);
     PushPipe<T2> getOutboundPipeline();
 
+    T2 process(T1 input);
+
     // Write to Outbound pipe
     void write(T1 input);
 }

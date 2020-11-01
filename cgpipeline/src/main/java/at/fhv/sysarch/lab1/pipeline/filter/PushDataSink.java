@@ -30,8 +30,8 @@ public class PushDataSink implements PushFilter<Pair<Face, Color>, Pair<Face, Co
     }
 
     @Override
-    public void write(Pair<Face, Color> pair) {
-        Face face = pair.fst();
+    public Pair<Face, Color> process(Pair<Face, Color> input) {
+        Face face = input.fst();
         Vec2 x1Screen = face.getV1().toScreen();
         Vec2 x2Screen = face.getV2().toScreen();
         Vec2 x3Screen = face.getV3().toScreen();
@@ -46,12 +46,6 @@ public class PushDataSink implements PushFilter<Pair<Face, Color>, Pair<Face, Co
             face.getV2().getY() * -100 + 400,
             face.getV3().getY() * -100 + 400
         };
-//        double[] x = new double[] {x1Screen.getX() * 100 + 400, x2Screen.getX() * 100 + 400,
-//            x3Screen.getX() * 100 + 400};
-//        double[] y = new double[] {x1Screen.getY() * -100 + 400, x2Screen.getY() * -100 + 400,
-//            x3Screen.getY() * -100 + 400};
-
-
 
         pd.getGraphicsContext().setStroke(pd.getModelColor());
         pd.getGraphicsContext().setFill(pd.getModelColor());
@@ -68,6 +62,24 @@ public class PushDataSink implements PushFilter<Pair<Face, Color>, Pair<Face, Co
                 pd.getGraphicsContext().strokePolygon(x,y,x.length);
                 break;
         }
-        return;
+
+        return null;
+    }
+
+    @Override
+    public void write(Pair<Face, Color> pair) {
+        Pair<Face, Color> result = process(pair);
+        if (result == null) {
+            return;
+        }
+
+        // should not get here at all ...
+//        double[] x = new double[] {x1Screen.getX() * 100 + 400, x2Screen.getX() * 100 + 400,
+//            x3Screen.getX() * 100 + 400};
+//        double[] y = new double[] {x1Screen.getY() * -100 + 400, x2Screen.getY() * -100 + 400,
+//            x3Screen.getY() * -100 + 400};
+
+
+
     }
 }
