@@ -77,29 +77,12 @@ public class PushPipelineFactory {
                         pd.getModelRotAxis() // Rotation axis is a Vec3 with y=1 and x/z=0
                 );
 
-                // compute updated model-view transformation
-                Mat4 modelTranslation = pd.getModelTranslation();
-                Mat4 viewTransformation = pd.getViewTransform();
-
-                Mat4 updatedTransformation = viewTransformation.multiply(modelTranslation).multiply(rotationMatrix);
-
                 // update model-view filter
-                modelViewFilter.setViewTransform(updatedTransformation);
+                modelViewFilter.setRotationMatrix(rotationMatrix);
 
                 // trigger rendering of the pipeline
                 PushPipe<Face> pipe = new PushPipe<>(modelViewFilter);
-                model.getFaces().forEach(face -> {
-                    // Rotate
-                    Face rotatedFace = new Face(
-                            rotationMatrix.multiply(face.getV1()),
-                            rotationMatrix.multiply(face.getV2()),
-                            rotationMatrix.multiply(face.getV3()),
-                            rotationMatrix.multiply(face.getN1()),
-                            rotationMatrix.multiply(face.getN2()),
-                            rotationMatrix.multiply(face.getN3())
-                    );
-                    pipe.write(rotatedFace);
-                });
+                model.getFaces().forEach(pipe::write);
             }
         };
     }

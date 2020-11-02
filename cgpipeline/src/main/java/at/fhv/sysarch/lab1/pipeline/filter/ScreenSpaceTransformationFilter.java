@@ -4,7 +4,6 @@ import at.fhv.sysarch.lab1.obj.Face;
 import at.fhv.sysarch.lab1.pipeline.PipelineData;
 import at.fhv.sysarch.lab1.pipeline.data.Pair;
 import at.fhv.sysarch.lab1.pipeline.pipes.PushPipe;
-import com.hackoeur.jglm.Vec4;
 import javafx.scene.paint.Color;
 
 public class ScreenSpaceTransformationFilter implements PushFilter<Pair<Face, Color>, Pair<Face, Color>> {
@@ -42,8 +41,6 @@ public class ScreenSpaceTransformationFilter implements PushFilter<Pair<Face, Co
                 dividedFace
         );
 
-        //return input;
-        // TODO - This filter is utterly broken!
         return new Pair<>(transformedFace, input.snd());
     }
 
