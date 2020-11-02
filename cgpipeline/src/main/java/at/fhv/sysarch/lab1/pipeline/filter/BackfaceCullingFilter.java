@@ -29,11 +29,11 @@ public class BackfaceCullingFilter implements PushFilter<Face, Face> {
     }
 
     @Override
-    public Face process(Face input) {
-        if (pipelineData.getViewingEye().dot(input.getN1().toVec3()) > 0) {
+    public Face process(Face face) {
+        if (face.getV1().dot(face.getN1()) > 0) {
             return null;
         }
-        return input;
+        return face;
     }
 
     @Override
