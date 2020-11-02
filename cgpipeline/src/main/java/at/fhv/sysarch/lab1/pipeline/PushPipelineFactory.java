@@ -13,7 +13,8 @@ import javafx.scene.paint.Color;
 
 public class PushPipelineFactory {
     public static AnimationTimer createPipeline(PipelineData pd) {
-        // TODO: push from the source (model)
+        // push from the source (model)
+        // Happens in line 86
 
         // 1. perform model-view transformation from model to VIEW SPACE coordinates
         ModelViewTransformationFilter modelViewFilter = new ModelViewTransformationFilter(pd);
@@ -24,7 +25,7 @@ public class PushPipelineFactory {
         modelViewFilter.setOutboundPipeline(modelViewToBackfacePipe);
 
         // 3. perform depth sorting in VIEW SPACE
-        // NOT POSSIBLE WITH A PUSH PIPELINE
+        // Not possible (without a hack) in the push pipeline
 
         // 4. add coloring (space unimportant)
         ColorFilter colorFilter = new ColorFilter(pd);
@@ -34,11 +35,14 @@ public class PushPipelineFactory {
         // lighting can be switched on/off
         PerspectiveProjectionFilter perspectiveProjectionFilter = new PerspectiveProjectionFilter(pd);
         if (pd.isPerformLighting()) {
-            // 4a. TODO perform lighting in VIEW SPACE
+            // 4a. perform lighting in VIEW SPACE
+            LightingFilter lightingFilter = new LightingFilter(pd);
+            PushPipe<Pair<Face, Color>> colorToLighting = new PushPipe<>(lightingFilter);
+            colorFilter.setOutboundPipeline(colorToLighting); // TODO
 
             // 5. perform projection transformation on VIEW SPACE coordinates
             PushPipe<Pair<Face, Color>> lightingToPerspectivePipe = new PushPipe<>(perspectiveProjectionFilter);
-            colorFilter.setOutboundPipeline(lightingToPerspectivePipe); // TODO
+            lightingFilter.setOutboundPipeline(lightingToPerspectivePipe);
         } else {
             // 5. perform projection transformation
             PushPipe<Pair<Face, Color>> colorToPerspectivePipe = new PushPipe<>(perspectiveProjectionFilter);
