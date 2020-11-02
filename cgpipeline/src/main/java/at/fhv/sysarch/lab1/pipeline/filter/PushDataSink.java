@@ -28,14 +28,14 @@ public class PushDataSink implements PushFilter<Pair<Face, Color>, Pair<Face, Co
         Color color = input.snd();
 
         double[] x = new double[]{
-                face.getV1().getX() * 100 + 400,
-                face.getV2().getX() * 100 + 400,
-                face.getV3().getX() * 100 + 400
+                face.getV1().getX(),
+                face.getV2().getX(),
+                face.getV3().getX()
         };
         double[] y = new double[]{
-                face.getV1().getY() * -100 + 400,
-                face.getV2().getY() * -100 + 400,
-                face.getV3().getY() * -100 + 400
+                face.getV1().getY(),
+                face.getV2().getY(),
+                face.getV3().getY()
         };
 
         pipelineData.getGraphicsContext().setStroke(color);
