@@ -1,47 +1,64 @@
 package at.fhv.sysarch.lab1.pipeline;
 
 import at.fhv.sysarch.lab1.animation.AnimationRenderer;
+import at.fhv.sysarch.lab1.obj.Face;
 import at.fhv.sysarch.lab1.obj.Model;
-import at.fhv.sysarch.lab1.pipeline.filter.ModelViewTransformationFilter;
+import at.fhv.sysarch.lab1.pipeline.data.Pair;
+import at.fhv.sysarch.lab1.pipeline.filter.*;
+import at.fhv.sysarch.lab1.pipeline.pipes.PushPipe;
+import com.hackoeur.jglm.Mat4;
+import com.hackoeur.jglm.Matrices;
 import javafx.animation.AnimationTimer;
+import javafx.scene.paint.Color;
 
 public class PushPipelineFactory {
     public static AnimationTimer createPipeline(PipelineData pd) {
-
         // TODO: push from the source (model)
 
-        // TODO 1. perform model-view transformation from model to VIEW SPACE coordinates
-        ModelViewTransformationFilter modelViewTransform =
-            new ModelViewTransformationFilter(
-                pd.getModelTranslation(),
-                pd.getViewTransform()
-            );
+        // 1. perform model-view transformation from model to VIEW SPACE coordinates
+        ModelViewTransformationFilter modelViewFilter = new ModelViewTransformationFilter(pd);
 
+        // 2. perform backface culling in VIEW SPACE
+        BackfaceCullingFilter backfaceCullingFilter = new BackfaceCullingFilter(pd);
+        PushPipe<Face> modelViewToBackfacePipe = new PushPipe<>(backfaceCullingFilter);
+        modelViewFilter.setOutboundPipeline(modelViewToBackfacePipe);
 
-        // MAYBE we need this somewhere..?? -> pd.getModelRotAxis();
-        // TODO 2. perform backface culling in VIEW SPACE
+        // 3. perform depth sorting in VIEW SPACE
+        // NOT POSSIBLE WITH A PUSH PIPELINE
 
-        // TODO 3. perform depth sorting in VIEW SPACE
-
-        // TODO 4. add coloring (space unimportant)
+        // 4. add coloring (space unimportant)
+        ColorFilter colorFilter = new ColorFilter(pd);
+        PushPipe<Face> depthSortingToColorPipe = new PushPipe<>(colorFilter);
+        backfaceCullingFilter.setOutboundPipeline(depthSortingToColorPipe);
 
         // lighting can be switched on/off
+        PerspectiveProjectionFilter perspectiveProjectionFilter = new PerspectiveProjectionFilter(pd);
         if (pd.isPerformLighting()) {
             // 4a. TODO perform lighting in VIEW SPACE
-            
-            // 5. TODO perform projection transformation on VIEW SPACE coordinates
+
+            // 5. perform projection transformation on VIEW SPACE coordinates
+            PushPipe<Pair<Face, Color>> lightingToPerspectivePipe = new PushPipe<>(perspectiveProjectionFilter);
+            colorFilter.setOutboundPipeline(lightingToPerspectivePipe); // TODO
         } else {
-            // 5. TODO perform projection transformation
+            // 5. perform projection transformation
+            PushPipe<Pair<Face, Color>> colorToPerspectivePipe = new PushPipe<>(perspectiveProjectionFilter);
+            colorFilter.setOutboundPipeline(colorToPerspectivePipe);
         }
 
-        // TODO 6. perform perspective division to screen coordinates
+        // 6. perform perspective division to screen coordinates
+        ScreenSpaceTransformationFilter screenSpaceTransformationFilter = new ScreenSpaceTransformationFilter(pd);
+        PushPipe<Pair<Face, Color>> lightingToScreenSpacePipe = new PushPipe<>(screenSpaceTransformationFilter);
+        perspectiveProjectionFilter.setOutboundPipeline(lightingToScreenSpacePipe);
 
-        // TODO 7. feed into the sink (renderer)
+        // 7. feed into the sink (renderer)
+        PushPipe<Pair<Face, Color>> toSinkPipe = new PushPipe<>(new PushDataSink(pd));
+        screenSpaceTransformationFilter.setOutboundPipeline(toSinkPipe);
 
         // returning an animation renderer which handles clearing of the
         // viewport and computation of the praction
         return new AnimationRenderer(pd) {
-            // TODO rotation variable goes in here
+            // rotation variable goes in here
+            float rotation = 0f;
 
             /** This method is called for every frame from the JavaFX Animation
              * system (using an AnimationTimer, see AnimationRenderer). 
@@ -50,15 +67,39 @@ public class PushPipelineFactory {
              */
             @Override
             protected void render(float fraction, Model model) {
-                // TODO compute rotation in radians
+                // compute rotation in radians
+                rotation += fraction;
+                double radiant = rotation % (2 * Math.PI); // 2 PI = 360°
 
-                // TODO create new model rotation matrix using pd.modelRotAxis
+                // create new model rotation matrix using pd.modelRotAxis
+                Mat4 rotationMatrix = Matrices.rotate(
+                        (float) radiant,
+                        pd.getModelRotAxis() // Rotation axis is a Vec3 with y=1 and x/z=0
+                );
 
-                // TODO compute updated model-view tranformation
+                // compute updated model-view transformation
+                Mat4 modelTranslation = pd.getModelTranslation();
+                Mat4 viewTransformation = pd.getViewTransform();
 
-                // TODO update model-view filter
+                Mat4 updatedTransformation = viewTransformation.multiply(modelTranslation).multiply(rotationMatrix);
 
-                // TODO trigger rendering of the pipeline
+                // update model-view filter
+                modelViewFilter.setViewTransform(updatedTransformation);
+
+                // trigger rendering of the pipeline
+                PushPipe<Face> pipe = new PushPipe<>(modelViewFilter);
+                model.getFaces().forEach(face -> {
+                    // Rotate
+                    Face rotatedFace = new Face(
+                            rotationMatrix.multiply(face.getV1()),
+                            rotationMatrix.multiply(face.getV2()),
+                            rotationMatrix.multiply(face.getV3()),
+                            rotationMatrix.multiply(face.getN1()),
+                            rotationMatrix.multiply(face.getN2()),
+                            rotationMatrix.multiply(face.getN3())
+                    );
+                    pipe.write(rotatedFace);
+                });
             }
         };
     }

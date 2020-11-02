@@ -3,26 +3,25 @@ package at.fhv.sysarch.lab1.pipeline.pipes;
 import at.fhv.sysarch.lab1.pipeline.filter.PushFilter;
 
 /**
- * @author Valentin
+ * @author Valentin Goronjic
+ * @author Dominic Luidold
  */
-public class PushPipe<T> {
-
+public class PushPipe<T> implements Pipe<T> {
     private PushFilter<T, ?> nextFilter;
 
     public PushPipe(PushFilter<T, ?> nextFilter) {
         this.nextFilter = nextFilter;
     }
 
-    public void setNextFilter(PushFilter<T, ?> nextFilter) {
-        this.nextFilter = nextFilter;
+    public void write(T data) {
+        this.nextFilter.write(data);
     }
 
-    public PushFilter<?, ?> getNextFilter() {
+    public PushFilter<T, ?> getNextFilter() {
         return this.nextFilter;
     }
 
-    public void write(T data) {
-        this.nextFilter.write(data);
-
+    public void setNextFilter(PushFilter<T, ?> nextFilter) {
+        this.nextFilter = nextFilter;
     }
 }

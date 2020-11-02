@@ -1,13 +1,18 @@
 package at.fhv.sysarch.lab1.pipeline.filter;
 
-import at.fhv.sysarch.lab1.pipeline.PipelineData;
-import at.fhv.sysarch.lab1.pipeline.pipes.Pipe;
+import at.fhv.sysarch.lab1.pipeline.pipes.PushPipe;
 
-public interface PushFilter<T1, T2> {
+/**
+ * @author Valentin Goronjic
+ * @author Dominic Luidold
+ */
+public interface PushFilter<T, S> {
 
-    void setOutboundPipeline(Pipe<T1> pipe);
-    Pipe<T2> getOutboundPipeline();
+    void write(T input);
 
-    // Write to Outbound pipe
-    void write(T1 input);
+    S process(T input);
+
+    PushPipe<S> getOutboundPipeline();
+
+    void setOutboundPipeline(PushPipe<S> pipe);
 }
