@@ -29,24 +29,9 @@ public class ScreenSpaceTransformationFilter implements PushFilter<Pair<Face, Co
         Face face = input.fst();
 
         Face dividedFace = new Face(
-                new Vec4(
-                        face.getV1().getX() / face.getV1().getZ(),
-                        face.getV1().getY() / face.getV1().getZ(),
-                        face.getV1().getZ() / face.getV1().getZ(),
-                        face.getV1().getZ()
-                ),
-                new Vec4(
-                        face.getV2().getX() / face.getV2().getZ(),
-                        face.getV2().getY() / face.getV2().getZ(),
-                        face.getV2().getZ() / face.getV2().getZ(),
-                        face.getV2().getZ()
-                ),
-                new Vec4(
-                        face.getV3().getX() / face.getV3().getZ(),
-                        face.getV3().getY() / face.getV3().getZ(),
-                        face.getV3().getZ() / face.getV3().getZ(),
-                        face.getV3().getZ()
-                ),
+                face.getV1().multiply((1.0f / face.getV1().getW())),
+                face.getV2().multiply((1.0f / face.getV2().getW())),
+                face.getV3().multiply((1.0f / face.getV3().getW())),
                 face
         );
 
@@ -57,9 +42,9 @@ public class ScreenSpaceTransformationFilter implements PushFilter<Pair<Face, Co
                 dividedFace
         );
 
-        return input;
+        //return input;
         // TODO - This filter is utterly broken!
-        // return new Pair<>(transformedFace, input.snd());
+        return new Pair<>(transformedFace, input.snd());
     }
 
     @Override

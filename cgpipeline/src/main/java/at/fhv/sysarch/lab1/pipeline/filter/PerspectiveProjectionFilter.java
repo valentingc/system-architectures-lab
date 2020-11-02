@@ -36,7 +36,6 @@ public class PerspectiveProjectionFilter implements PushFilter<Pair<Face, Color>
                 face
         );
 
-        // TODO - This is probably broken?
         return new Pair<>(projectedFace, input.snd());
     }
 
