@@ -3,6 +3,7 @@ package at.fhv.sysarch.lab1.pipeline;
 import at.fhv.sysarch.lab1.animation.AnimationRenderer;
 import at.fhv.sysarch.lab1.obj.Face;
 import at.fhv.sysarch.lab1.obj.Model;
+import at.fhv.sysarch.lab1.pipeline.data.DataSink;
 import at.fhv.sysarch.lab1.pipeline.data.Pair;
 import at.fhv.sysarch.lab1.pipeline.filter.*;
 import at.fhv.sysarch.lab1.pipeline.pipes.PushPipe;
@@ -20,7 +21,7 @@ public class PushPipelineFactory {
         ModelViewTransformationFilter modelViewFilter = new ModelViewTransformationFilter(pd);
 
         // 2. perform backface culling in VIEW SPACE
-        BackfaceCullingFilter backfaceCullingFilter = new BackfaceCullingFilter(pd);
+        BackfaceCullingFilter backfaceCullingFilter = new BackfaceCullingFilter();
         PushPipe<Face> modelViewToBackfacePipe = new PushPipe<>(backfaceCullingFilter);
         modelViewFilter.setOutboundPipeline(modelViewToBackfacePipe);
 
@@ -37,8 +38,8 @@ public class PushPipelineFactory {
         if (pd.isPerformLighting()) {
             // 4a. perform lighting in VIEW SPACE
             LightingFilter lightingFilter = new LightingFilter(pd);
-            PushPipe<Pair<Face, Color>> colorToLighting = new PushPipe<>(lightingFilter);
-            colorFilter.setOutboundPipeline(colorToLighting); // TODO
+            PushPipe<Pair<Face, Color>> colorToLightingPipe = new PushPipe<>(lightingFilter);
+            colorFilter.setOutboundPipeline(colorToLightingPipe); // TODO
 
             // 5. perform projection transformation on VIEW SPACE coordinates
             PushPipe<Pair<Face, Color>> lightingToPerspectivePipe = new PushPipe<>(perspectiveProjectionFilter);
@@ -55,7 +56,7 @@ public class PushPipelineFactory {
         perspectiveProjectionFilter.setOutboundPipeline(lightingToScreenSpacePipe);
 
         // 7. feed into the sink (renderer)
-        PushPipe<Pair<Face, Color>> toSinkPipe = new PushPipe<>(new PushDataSink(pd));
+        PushPipe<Pair<Face, Color>> toSinkPipe = new PushPipe<>(new DataSink(pd));
         screenSpaceTransformationFilter.setOutboundPipeline(toSinkPipe);
 
         // returning an animation renderer which handles clearing of the

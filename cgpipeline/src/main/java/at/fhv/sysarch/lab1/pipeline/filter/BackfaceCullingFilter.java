@@ -1,19 +1,25 @@
 package at.fhv.sysarch.lab1.pipeline.filter;
 
 import at.fhv.sysarch.lab1.obj.Face;
-import at.fhv.sysarch.lab1.pipeline.PipelineData;
+import at.fhv.sysarch.lab1.pipeline.pipes.PullPipe;
 import at.fhv.sysarch.lab1.pipeline.pipes.PushPipe;
 
 /**
  * @author Valentin Goronjic
  * @author Dominic Luidold
  */
-public class BackfaceCullingFilter implements PushFilter<Face, Face> {
-    private final PipelineData pipelineData;
+public class BackfaceCullingFilter implements PushFilter<Face, Face>, PullFilter<Face, Face> {
+    private PullPipe<Face> inboundPipeline;
     private PushPipe<Face> outboundPipeline;
 
-    public BackfaceCullingFilter(PipelineData pipelineData) {
-        this.pipelineData = pipelineData;
+    @Override
+    public Face read() {
+        Face input = inboundPipeline.read();
+        if (null == input) {
+            return null;
+        }
+
+        return process(input);
     }
 
     @Override
@@ -34,6 +40,16 @@ public class BackfaceCullingFilter implements PushFilter<Face, Face> {
             return null;
         }
         return face;
+    }
+
+    @Override
+    public PullPipe<Face> getInboundPipeline() {
+        return inboundPipeline;
+    }
+
+    @Override
+    public void setInboundPipeline(PullPipe<Face> pipe) {
+        this.inboundPipeline = pipe;
     }
 
     @Override

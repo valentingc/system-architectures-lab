@@ -6,7 +6,7 @@ import at.fhv.sysarch.lab1.pipeline.filter.PushFilter;
  * @author Valentin Goronjic
  * @author Dominic Luidold
  */
-public interface Pipe<T> {
+public interface PushPipeInterface<T> {
 
     void write(T data);
 

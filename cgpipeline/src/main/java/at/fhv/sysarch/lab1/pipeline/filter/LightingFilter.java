@@ -3,15 +3,27 @@ package at.fhv.sysarch.lab1.pipeline.filter;
 import at.fhv.sysarch.lab1.obj.Face;
 import at.fhv.sysarch.lab1.pipeline.PipelineData;
 import at.fhv.sysarch.lab1.pipeline.data.Pair;
+import at.fhv.sysarch.lab1.pipeline.pipes.PullPipe;
 import at.fhv.sysarch.lab1.pipeline.pipes.PushPipe;
 import javafx.scene.paint.Color;
 
-public class LightingFilter implements PushFilter<Pair<Face, Color>, Pair<Face, Color>> {
+public class LightingFilter implements PushFilter<Pair<Face, Color>, Pair<Face, Color>>, PullFilter<Pair<Face, Color>, Pair<Face, Color>> {
     private final PipelineData pipelineData;
+    private PullPipe<Pair<Face, Color>> inboundPipeline;
     private PushPipe<Pair<Face, Color>> outboundPipeline;
 
     public LightingFilter(PipelineData pipelineData) {
         this.pipelineData = pipelineData;
+    }
+
+    @Override
+    public Pair<Face, Color> read() {
+        Pair<Face, Color> input = inboundPipeline.read();
+        if (null == input) {
+            return null;
+        }
+
+        return process(input);
     }
 
     @Override
@@ -36,6 +48,16 @@ public class LightingFilter implements PushFilter<Pair<Face, Color>, Pair<Face, 
         }
 
         return new Pair<>(face, input.snd().deriveColor(0, 1, dotProduct, 1));
+    }
+
+    @Override
+    public PullPipe<Pair<Face, Color>> getInboundPipeline() {
+        return inboundPipeline;
+    }
+
+    @Override
+    public void setInboundPipeline(PullPipe<Pair<Face, Color>> pipe) {
+        inboundPipeline = pipe;
     }
 
     @Override
