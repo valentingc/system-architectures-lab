@@ -29,7 +29,7 @@ public class DataSink implements PushFilter<Pair<Face, Color>, Pair<Face, Color>
     public Pair<Face, Color> read() {
         Pair<Face, Color> input = inboundPipeline.read();
         if (null != input) {
-            process(this.inboundPipeline.read());
+            process(input);
         }
 
         // No return value needed - rendering only
