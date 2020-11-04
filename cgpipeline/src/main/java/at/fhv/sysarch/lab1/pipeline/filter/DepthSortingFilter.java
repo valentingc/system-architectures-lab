@@ -1,70 +1,81 @@
 package at.fhv.sysarch.lab1.pipeline.filter;
 
 import at.fhv.sysarch.lab1.obj.Face;
-import at.fhv.sysarch.lab1.pipeline.PipelineData;
 import at.fhv.sysarch.lab1.pipeline.Util;
-import at.fhv.sysarch.lab1.pipeline.data.Pair;
 import at.fhv.sysarch.lab1.pipeline.pipes.PullPipe;
-import javafx.scene.paint.Color;
-
 import java.util.PriorityQueue;
 import java.util.Queue;
 
-public class DepthSortingFilter implements PullFilter<Pair<Face, Color>, Pair<Face, Color>> {
-    private final PipelineData pipelineData;
-    private PullPipe<Pair<Face, Color>> inboundPipeline;
-    private Queue<Pair<Face, Color>> processQueue;
+/**
+ * @author Valentin Goronjic
+ * @author Dominic Luidold
+ */
+public class DepthSortingFilter implements PullFilter<Face, Face> {
+    private final Queue<Face> processQueue;
+    private boolean bufferingMode;
+    private PullPipe<Face> inboundPipeline;
 
-    public DepthSortingFilter(PipelineData pipelineData) {
-        this.pipelineData = pipelineData;
+    public DepthSortingFilter() {
+        bufferingMode = true;
+        processQueue = new PriorityQueue<>((face1, face2) -> {
+            // First face
+            float firstZ1 = face1.getV1().getZ();
+            float firstZ2 = face1.getV2().getZ();
+            float firstZ3 = face1.getV3().getZ();
+
+            float firstFaceAverageZ = (firstZ1 + firstZ2 + firstZ3) / 3;
+
+            // Second face
+            float secondZ1 = face2.getV1().getZ();
+            float secondZ2 = face2.getV2().getZ();
+            float secondZ3 = face2.getV3().getZ();
+
+            float secondFaceAverageZ = (secondZ1 + secondZ2 + secondZ3) / 3;
+
+            // Computed value is too small for rounding -> value * 100
+            // value + 0.5 to round without using, for example, Math.round()
+            return (int) ((firstFaceAverageZ - secondFaceAverageZ) * 100 + 0.5);
+        });
     }
 
     @Override
-    public Pair<Face, Color> read() {
-        this.processQueue = new PriorityQueue<>((firstPair, secondPair) -> {
-            // First pair
-            float firstZ1 = firstPair.fst().getV1().getZ();
-            float firstZ2 = firstPair.fst().getV2().getZ();
-            float firstZ3 = firstPair.fst().getV3().getZ();
-
-            float firstPairAverageZ = (firstZ1 + firstZ2 + firstZ3) / 3;
-
-            // Second pair
-            float secondZ1 = secondPair.fst().getV1().getZ();
-            float secondZ2 = secondPair.fst().getV2().getZ();
-            float secondZ3 = secondPair.fst().getV3().getZ();
-
-            float secondPairAverageZ = (secondZ1 + secondZ2 + secondZ3) / 3;
-
-            // Calculation
-            return (int) (firstPairAverageZ - secondPairAverageZ);
-        });
-
-        while (true) {
-            Pair<Face, Color> input = inboundPipeline.read();
-            if (Util.isFaceMakingEnd(input.fst())) {
-                break;
+    public Face read() {
+        // When buffering mode active - pull all faces from previous filter
+        while (bufferingMode) {
+            Face input = inboundPipeline.read();
+            if (null == input) {
+                continue;
             }
 
-            this.processQueue.add(process(input));
+            // Once end of stream is reached, end buffering mode
+            if (Util.isFaceMakingEnd(input)) {
+                bufferingMode = false;
+            }
+
+            processQueue.add(input);
         }
 
-        // TODO - Utterly broken
-        return null;
-    }
+        // When buffer empty, start buffering mode
+        if (processQueue.size() <= 1) {
+            bufferingMode = true;
+        }
 
-    @Override
-    public Pair<Face, Color> process(Pair<Face, Color> input) {
         return this.processQueue.poll();
     }
 
     @Override
-    public PullPipe<Pair<Face, Color>> getInboundPipeline() {
+    public Face process(Face input) {
+        // See read() method
+        return input;
+    }
+
+    @Override
+    public PullPipe<Face> getInboundPipeline() {
         return inboundPipeline;
     }
 
     @Override
-    public void setInboundPipeline(PullPipe<Pair<Face, Color>> pipe) {
+    public void setInboundPipeline(PullPipe<Face> pipe) {
         this.inboundPipeline = pipe;
     }
 }
