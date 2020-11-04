@@ -2,17 +2,36 @@ package at.fhv.sysarch.lab1.pipeline.filter;
 
 import at.fhv.sysarch.lab1.obj.Face;
 import at.fhv.sysarch.lab1.pipeline.PipelineData;
+import at.fhv.sysarch.lab1.pipeline.Util;
 import at.fhv.sysarch.lab1.pipeline.data.Pair;
+import at.fhv.sysarch.lab1.pipeline.pipes.PullPipe;
 import at.fhv.sysarch.lab1.pipeline.pipes.PushPipe;
 import com.hackoeur.jglm.Mat4;
 import javafx.scene.paint.Color;
 
-public class PerspectiveProjectionFilter implements PushFilter<Pair<Face, Color>, Pair<Face, Color>> {
+/**
+ * @author Valentin Goronjic
+ * @author Dominic Luidold
+ */
+public class PerspectiveProjectionFilter implements PushFilter<Pair<Face, Color>, Pair<Face, Color>>, PullFilter<Pair<Face, Color>, Pair<Face, Color>> {
     private final PipelineData pipelineData;
+    private PullPipe<Pair<Face, Color>> inboundPipeline;
     private PushPipe<Pair<Face, Color>> outboundPipeline;
 
     public PerspectiveProjectionFilter(PipelineData pipelineData) {
         this.pipelineData = pipelineData;
+    }
+
+    @Override
+    public Pair<Face, Color> read() {
+        Pair<Face, Color> input = inboundPipeline.read();
+        if (null == input) {
+            return null;
+        } else if (Util.isFaceMakingEnd(input.fst())) {
+            return input;
+        }
+
+        return process(input);
     }
 
     @Override
@@ -37,6 +56,16 @@ public class PerspectiveProjectionFilter implements PushFilter<Pair<Face, Color>
         );
 
         return new Pair<>(projectedFace, input.snd());
+    }
+
+    @Override
+    public PullPipe<Pair<Face, Color>> getInboundPipeline() {
+        return inboundPipeline;
+    }
+
+    @Override
+    public void setInboundPipeline(PullPipe<Pair<Face, Color>> pipe) {
+        inboundPipeline = pipe;
     }
 
     @Override

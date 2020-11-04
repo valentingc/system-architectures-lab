@@ -1,8 +1,11 @@
-package at.fhv.sysarch.lab1.pipeline.filter;
+package at.fhv.sysarch.lab1.pipeline.data;
 
 import at.fhv.sysarch.lab1.obj.Face;
 import at.fhv.sysarch.lab1.pipeline.PipelineData;
-import at.fhv.sysarch.lab1.pipeline.data.Pair;
+import at.fhv.sysarch.lab1.pipeline.Util;
+import at.fhv.sysarch.lab1.pipeline.filter.PullFilter;
+import at.fhv.sysarch.lab1.pipeline.filter.PushFilter;
+import at.fhv.sysarch.lab1.pipeline.pipes.PullPipe;
 import at.fhv.sysarch.lab1.pipeline.pipes.PushPipe;
 import javafx.scene.paint.Color;
 
@@ -10,11 +13,30 @@ import javafx.scene.paint.Color;
  * @author Valentin Goronjic
  * @author Dominic Luidold
  */
-public class PushDataSink implements PushFilter<Pair<Face, Color>, Pair<Face, Color>> {
+public class DataSink implements PushFilter<Pair<Face, Color>, Pair<Face, Color>>, PullFilter<Pair<Face, Color>, Pair<Face, Color>> {
     private final PipelineData pipelineData;
+    private PullPipe<Pair<Face, Color>> inboundPipeline;
 
-    public PushDataSink(PipelineData pipelineData) {
+    public DataSink(PipelineData pipelineData) {
         this.pipelineData = pipelineData;
+    }
+
+    @Override
+    public Pair<Face, Color> read() {
+        while (true) {
+            Pair<Face, Color> input = inboundPipeline.read();
+            if (null == input) {
+                // Null is an acceptable value -> culled faces
+                continue;
+            } else if (Util.isFaceMakingEnd(input.fst())) {
+                break;
+            }
+
+            process(input);
+        }
+
+        // no return value needed - rendering only
+        return null;
     }
 
     @Override
@@ -55,6 +77,16 @@ public class PushDataSink implements PushFilter<Pair<Face, Color>, Pair<Face, Co
 
         // No return value needed - rendering only
         return null;
+    }
+
+    @Override
+    public PullPipe<Pair<Face, Color>> getInboundPipeline() {
+        return null;
+    }
+
+    @Override
+    public void setInboundPipeline(PullPipe<Pair<Face, Color>> pipe) {
+        this.inboundPipeline = pipe;
     }
 
     @Override
