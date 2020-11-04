@@ -26,6 +26,7 @@ public class DataSink implements PushFilter<Pair<Face, Color>, Pair<Face, Color>
         while (true) {
             Pair<Face, Color> input = inboundPipeline.read();
             if (null == input) {
+                // Null is an acceptable value -> culled faces
                 continue;
             } else if (Util.isFaceMakingEnd(input.fst())) {
                 break;
