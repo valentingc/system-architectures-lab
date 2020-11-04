@@ -2,6 +2,7 @@ package at.fhv.sysarch.lab1.pipeline.filter;
 
 import at.fhv.sysarch.lab1.obj.Face;
 import at.fhv.sysarch.lab1.pipeline.PipelineData;
+import at.fhv.sysarch.lab1.pipeline.Util;
 import at.fhv.sysarch.lab1.pipeline.pipes.PullPipe;
 import at.fhv.sysarch.lab1.pipeline.pipes.PushPipe;
 import com.hackoeur.jglm.Mat4;
@@ -25,6 +26,8 @@ public class ModelViewTransformationFilter implements PushFilter<Face, Face>, Pu
         Face input = inboundPipeline.read();
         if (null == input) {
             return null;
+        } else if (Util.isFaceMakingEnd(input)) {
+            return input;
         }
 
         return process(input);

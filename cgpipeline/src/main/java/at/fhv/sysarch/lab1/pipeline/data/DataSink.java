@@ -2,6 +2,7 @@ package at.fhv.sysarch.lab1.pipeline.data;
 
 import at.fhv.sysarch.lab1.obj.Face;
 import at.fhv.sysarch.lab1.pipeline.PipelineData;
+import at.fhv.sysarch.lab1.pipeline.Util;
 import at.fhv.sysarch.lab1.pipeline.filter.PullFilter;
 import at.fhv.sysarch.lab1.pipeline.filter.PushFilter;
 import at.fhv.sysarch.lab1.pipeline.pipes.PullPipe;
@@ -20,19 +21,20 @@ public class DataSink implements PushFilter<Pair<Face, Color>, Pair<Face, Color>
         this.pipelineData = pipelineData;
     }
 
-    public DataSink(PipelineData pipelineData, PullPipe<Pair<Face, Color>> inboundPipeline) {
-        this.pipelineData = pipelineData;
-        this.inboundPipeline = inboundPipeline;
-    }
-
     @Override
     public Pair<Face, Color> read() {
-        Pair<Face, Color> input = inboundPipeline.read();
-        if (null != input) {
+        while (true) {
+            Pair<Face, Color> input = inboundPipeline.read();
+            if (null == input) {
+                continue;
+            } else if (Util.isFaceMakingEnd(input.fst())) {
+                break;
+            }
+
             process(input);
         }
 
-        // No return value needed - rendering only
+        // no return value needed - rendering only
         return null;
     }
 

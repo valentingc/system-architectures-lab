@@ -4,13 +4,14 @@ import at.fhv.sysarch.lab1.obj.Face;
 import at.fhv.sysarch.lab1.obj.Model;
 import at.fhv.sysarch.lab1.pipeline.filter.PullFilter;
 import at.fhv.sysarch.lab1.pipeline.pipes.PullPipe;
+import com.hackoeur.jglm.Vec4;
 
 /**
  * @author Valentin Goronjic
  * @author Dominic Luidold
  */
 public class DataSource implements PullFilter<Face, Face> {
-    private final Model model;
+    private Model model;
     private int currentFaceIndex;
 
     public DataSource(Model model) {
@@ -20,7 +21,15 @@ public class DataSource implements PullFilter<Face, Face> {
     @Override
     public Face read() {
         if (currentFaceIndex >= model.getFaces().size()) {
-            return null;
+            // Special marker face to indicate end of data
+            return new Face(
+                    Vec4.VEC4_ZERO,
+                    Vec4.VEC4_ZERO,
+                    Vec4.VEC4_ZERO,
+                    Vec4.VEC4_ZERO,
+                    Vec4.VEC4_ZERO,
+                    Vec4.VEC4_ZERO
+            );
         }
 
         return model.getFaces().get(currentFaceIndex++);
@@ -41,5 +50,10 @@ public class DataSource implements PullFilter<Face, Face> {
     @Override
     public void setInboundPipeline(PullPipe<Face> pipe) {
         // Intentionally empty
+    }
+
+    public void setModel(Model model) {
+        this.model = model;
+        this.currentFaceIndex = 0;
     }
 }

@@ -1,6 +1,7 @@
 package at.fhv.sysarch.lab1.pipeline.filter;
 
 import at.fhv.sysarch.lab1.obj.Face;
+import at.fhv.sysarch.lab1.pipeline.Util;
 import at.fhv.sysarch.lab1.pipeline.pipes.PullPipe;
 import at.fhv.sysarch.lab1.pipeline.pipes.PushPipe;
 
@@ -17,6 +18,8 @@ public class BackfaceCullingFilter implements PushFilter<Face, Face>, PullFilter
         Face input = inboundPipeline.read();
         if (null == input) {
             return null;
+        } else if (Util.isFaceMakingEnd(input)) {
+            return input;
         }
 
         return process(input);

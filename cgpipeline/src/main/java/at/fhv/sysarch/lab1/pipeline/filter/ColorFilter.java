@@ -7,6 +7,10 @@ import at.fhv.sysarch.lab1.pipeline.pipes.PullPipe;
 import at.fhv.sysarch.lab1.pipeline.pipes.PushPipe;
 import javafx.scene.paint.Color;
 
+/**
+ * @author Valentin Goronjic
+ * @author Dominic Luidold
+ */
 public class ColorFilter implements PushFilter<Face, Pair<Face, Color>>, PullFilter<Pair<Face, Color>, Face> {
     private final PipelineData pipelineData;
     private PullPipe<Face> inboundPipeline;

@@ -89,6 +89,7 @@ public class PullPipelineFactory {
                 modelViewFilter.setRotationMatrix(rotationMatrix);
 
                 // trigger rendering of the pipeline
+                dataSource.setModel(model);
                 dataSink.read();
             }
         };
