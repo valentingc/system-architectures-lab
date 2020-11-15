@@ -1,5 +1,6 @@
 package at.fhv.sysarch.lab2.game;
 
+import at.fhv.sysarch.lab2.physics.PhysicsEngine;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -9,9 +10,13 @@ import javafx.scene.input.MouseEvent;
 
 public class Game {
     private final Renderer renderer;
+    private final PhysicsEngine engine;
+    private double xStart;
+    private double yStart;
 
-    public Game(Renderer renderer) {      
+    public Game(Renderer renderer, PhysicsEngine engine) {
         this.renderer = renderer;
+        this.engine = engine;
         this.initWorld();
     }
 
@@ -21,17 +26,33 @@ public class Game {
 
         double pX = this.renderer.screenToPhysicsX(x);
         double pY = this.renderer.screenToPhysicsY(y);
+        System.out.println("Mouse pressed");
+
+        xStart = pX;
+        yStart = pY;
     }
 
     public void onMouseReleased(MouseEvent e) {
-    }
-
-    public void setOnMouseDragged(MouseEvent e) {
+        System.out.println("Mouse relesed");
         double x = e.getX();
         double y = e.getY();
 
+        double pX = this.renderer.screenToPhysicsX(x);
+        double pY = this.renderer.screenToPhysicsY(y);
+
+        // aufhören zeichnen
+        this.renderer.setCueCoords(this.xStart, pX, this.yStart, pY);
+    }
+
+    public void setOnMouseDragged(MouseEvent e) {
+        System.out.println("Mouse dragged");
+        double x = e.getX();
+        double y = e.getY();
+
+        // zeichnen
         double pX = renderer.screenToPhysicsX(x);
         double pY = renderer.screenToPhysicsY(y);
+
     }
 
     private void placeBalls(List<Ball> balls) {
@@ -67,6 +88,7 @@ public class Game {
         List<Ball> balls = new ArrayList<>();
         
         for (Ball b : Ball.values()) {
+            this.engine.getWorld().addBody(b.getBody());
             if (b == Ball.WHITE)
                 continue;
 
