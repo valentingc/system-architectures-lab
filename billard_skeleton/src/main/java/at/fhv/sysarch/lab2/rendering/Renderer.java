@@ -240,15 +240,21 @@ public class Renderer extends AnimationTimer {
         }
         //this.gc.setTransform(this.poolCoords);
 
+
         if (this.drawingState.equals(CueDrawingState.PRESSED)) {
             // kp was hier passieren soll.. :(
-            this.gc.beginPath();
-            this.gc.moveTo(this.xStart,this.yStart);
-            this.gc.stroke();
+            //this.gc.beginPath();
+            //this.gc.moveTo(this.xStart,this.yStart);
+            //this.gc.stroke();
+            this.gc.strokeLine(0,0,this.xStart * SCALE,this.yStart * SCALE);
         } else if (this.drawingState.equals(CueDrawingState.DRAGGED)) {
-            this.gc.lineTo(this.xStart * SCALE, this.yStart * SCALE);
-            this.gc.stroke();
+
+            //this.gc.lineTo(this.xStart * SCALE, this.yStart * SCALE);
+            //this.gc.stroke();
+            this.gc.strokeLine(0,0, this.xStart * SCALE,this.yStart * SCALE);
         }
+
+
     }
 
     private void drawFPS(double dt) {
