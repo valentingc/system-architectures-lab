@@ -49,7 +49,7 @@ public class Renderer extends AnimationTimer {
     private double yStart;
     private double xEnd;
     private double yEnd;
-    private boolean isDrawingCue;
+    private CueDrawingState drawingState;
 
     private Optional<FrameListener> frameListener;
 
@@ -235,13 +235,19 @@ public class Renderer extends AnimationTimer {
     private void drawCue() {
         // (0/0) mitte von der weißen kugel
         // TODO: draw cue
-        if (this.isDrawingCue) {
+        if (this.drawingState == null) {
+            return;
+        }
+        this.gc.setTransform(this.poolCoords);
+
+        if (this.drawingState.equals(CueDrawingState.PRESSED)) {
             // kp was hier passieren soll.. :(
             this.gc.beginPath();
             this.gc.moveTo(this.xStart, this.yStart);
             this.gc.stroke();
-        } else {
-            // ??
+        } else if (this.drawingState.equals(CueDrawingState.DRAGGED)) {
+            this.gc.lineTo(this.xStart * SCALE, this.yStart * SCALE);
+            this.gc.stroke();
         }
     }
 
@@ -333,9 +339,16 @@ public class Renderer extends AnimationTimer {
         this.gc.fillOval(-r, -r, d, d);
     }
 
-    public void setIsDrawingCue(boolean isDrawing) {
-        this.isDrawingCue = isDrawing;
+    public enum CueDrawingState {
+        NONE,
+        PRESSED,
+        DRAGGED,
+        RELEASED
     }
+    public void setDrawingState(CueDrawingState drawingState) {
+        this.drawingState = drawingState;
+    }
+
 
     public void setCueCoords(double xStart, double xEnd, double yStart, double yEnd) {
         this.xStart = xStart;
