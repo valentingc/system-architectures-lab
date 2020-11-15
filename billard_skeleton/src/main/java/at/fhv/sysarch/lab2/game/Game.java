@@ -9,9 +9,11 @@ import java.util.List;
 import at.fhv.sysarch.lab2.rendering.Renderer;
 import javafx.geometry.Point2D;
 import javafx.scene.input.MouseEvent;
+import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.Vector2;
 
 public class Game {
+    private World world;
     private final Renderer renderer;
     private final PhysicsEngine engine;
     private double xStart;
@@ -23,13 +25,13 @@ public class Game {
         this.renderer = renderer;
         this.engine = engine;
         this.initWorld();
+        this.engine.begin(this.engine.getWorld().getStep(), this.engine.getWorld());
     }
 
     public void onMousePressed(MouseEvent e) {
         double x = e.getX();
         double y = e.getY();
 
-        System.out.println("Mouse pressed");
         this.xStart = x;
         this.yStart = y;
         this.xEnd = x;
@@ -37,28 +39,29 @@ public class Game {
     }
 
     public void onMouseReleased(MouseEvent e) {
-        System.out.println("Mouse relesed");
         double x = e.getX();
         double y = e.getY();
 
-        Point2D point = getCalculatedPoint(x, y);
+        Point2D point = getCalculatedPoint(x,y);
         var length = getLength(point);
+        point = point.normalize();
 
-        //Ball.WHITE.getBody().applyImpulse(new Vector2(point.getX(), point.getY()));
+        Ball.WHITE.getBody().applyImpulse(new Vector2(point.getX(),point.getY()));
+
         // zeichnen
         this.renderer.setCueCoords(point.getX() * length, point.getY() * length);
         this.renderer.setDrawingState(Renderer.CueDrawingState.RELEASED);
     }
 
     public void setOnMouseDragged(MouseEvent e) {
-        System.out.println("Mouse dragged");
         double x = e.getX();
         double y = e.getY();
         this.xEnd = x;
         this.yEnd = y;
 
-        Point2D point = getCalculatedPoint(x, y);
+        Point2D point = getCalculatedPoint(x,y);
         var length = getLength(point);
+        point = point.normalize();
 
         // zeichnen
         this.renderer.setCueCoords(point.getX() * length, point.getY() * length);
@@ -71,7 +74,6 @@ public class Game {
         var deltaY = this.yStart - y;
 
         Point2D point = new Point2D(deltaX, deltaY);
-        point = point.normalize();
 
         return point;
     }

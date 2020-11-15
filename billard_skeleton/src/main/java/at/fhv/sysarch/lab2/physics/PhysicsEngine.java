@@ -20,7 +20,7 @@ public class PhysicsEngine implements StepListener, ContactListener {
 
     public PhysicsEngine() {
         world = new World();
-        //world.setGravity(World.EARTH_GRAVITY);  //-> not needed
+        world.setGravity(World.ZERO_GRAVITY);  //-> not needed
         world.addListener(this);
     }
 
@@ -34,7 +34,7 @@ public class PhysicsEngine implements StepListener, ContactListener {
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
-                world.step((int) step.getDeltaTime());
+                world.step(1);
             }
         };
 
@@ -59,7 +59,7 @@ public class PhysicsEngine implements StepListener, ContactListener {
 
     @Override
     public void sensed(ContactPoint point) {
-
+        System.out.println("sensed");
     }
 
     @Override
