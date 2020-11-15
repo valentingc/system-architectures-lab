@@ -1,54 +1,51 @@
 package at.fhv.sysarch.lab2.game;
 
 import at.fhv.sysarch.lab2.physics.PhysicsEngine;
-import java.awt.Point;
+import at.fhv.sysarch.lab2.rendering.Renderer;
+import javafx.geometry.Point2D;
+import javafx.scene.input.MouseEvent;
+import org.dyn4j.geometry.Vector2;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import at.fhv.sysarch.lab2.rendering.Renderer;
-import javafx.geometry.Point2D;
-import javafx.scene.input.MouseEvent;
-import org.dyn4j.dynamics.World;
-import org.dyn4j.geometry.Vector2;
-
 public class Game {
-    private World world;
     private final Renderer renderer;
     private final PhysicsEngine engine;
     private double xStart;
     private double yStart;
-    private double xEnd;
-    private double yEnd;
 
     public Game(Renderer renderer, PhysicsEngine engine) {
         this.renderer = renderer;
         this.engine = engine;
         this.initWorld();
-        this.engine.begin(this.engine.getWorld().getStep(), this.engine.getWorld());
+
+        // Start world simulation stepping
+        this.engine.begin(
+                this.engine.getWorld().getStep(),
+                this.engine.getWorld()
+        );
     }
 
     public void onMousePressed(MouseEvent e) {
-        double x = e.getX();
-        double y = e.getY();
+        this.xStart = e.getX();
+        this.yStart = e.getY();
 
-        this.xStart = x;
-        this.yStart = y;
-        this.xEnd = x;
-        this.yEnd = y;
+        this.renderer.setDrawingState(Renderer.CueDrawingState.PRESSED);
     }
 
     public void onMouseReleased(MouseEvent e) {
         double x = e.getX();
         double y = e.getY();
 
-        Point2D point = getCalculatedPoint(x,y);
-        var length = getLength(point);
+        Point2D point = getCalculatedPoint(x, y);
+        double length = getLength(point);
         point = point.normalize();
 
-        Ball.WHITE.getBody().applyImpulse(new Vector2(point.getX(),point.getY()));
+        Ball.WHITE.getBody().applyImpulse(new Vector2(point.getX(), point.getY()));
 
-        // zeichnen
+        // Init cue drawing
         this.renderer.setCueCoords(point.getX() * length, point.getY() * length);
         this.renderer.setDrawingState(Renderer.CueDrawingState.RELEASED);
     }
@@ -56,30 +53,42 @@ public class Game {
     public void setOnMouseDragged(MouseEvent e) {
         double x = e.getX();
         double y = e.getY();
-        this.xEnd = x;
-        this.yEnd = y;
 
-        Point2D point = getCalculatedPoint(x,y);
-        var length = getLength(point);
+        Point2D point = getCalculatedPoint(x, y);
+        double length = getLength(point);
         point = point.normalize();
 
-        // zeichnen
+        // Init cue drawing
         this.renderer.setCueCoords(point.getX() * length, point.getY() * length);
         this.renderer.setDrawingState(Renderer.CueDrawingState.DRAGGED);
 
     }
 
+    /**
+     * Calculates the point where the mouse is relative to the starting point.
+     *
+     * @param x The current x coordinate
+     * @param y The current y coordinate
+     *
+     * @return {@link Point2D} containing the newly calculated coordinates
+     */
     private Point2D getCalculatedPoint(double x, double y) {
         var deltaX = this.xStart - x;
         var deltaY = this.yStart - y;
 
-        Point2D point = new Point2D(deltaX, deltaY);
-
-        return point;
+        return new Point2D(deltaX, deltaY);
     }
 
+    /**
+     * Calculates the length of a stroke based on a {@link Point2D}.
+     *
+     * @param point The point to use for calculation
+     *
+     * @return The calculated length
+     */
     private double getLength(Point2D point) {
-        var length = (point.magnitude() / 10) / 4;
+        double length = (point.magnitude() / 10) / 4;
+        // Artificially limit length
         if (length > 10) {
             length = 10;
         }
@@ -95,7 +104,7 @@ public class Game {
         int col = 0;
         int colSize = 5;
 
-        double y0 = -2*Ball.Constants.RADIUS*2;
+        double y0 = -2 * Ball.Constants.RADIUS * 2;
         double x0 = -Table.Constants.WIDTH * 0.25 - Ball.Constants.RADIUS;
 
         for (Ball b : balls) {
@@ -118,7 +127,7 @@ public class Game {
 
     private void initWorld() {
         List<Ball> balls = new ArrayList<>();
-        
+
         for (Ball b : Ball.values()) {
             this.engine.getWorld().addBody(b.getBody());
             if (b == Ball.WHITE)
@@ -126,13 +135,13 @@ public class Game {
 
             balls.add(b);
         }
-       
+
         this.placeBalls(balls);
 
         Ball.WHITE.setPosition(Table.Constants.WIDTH * 0.25, 0);
-        
+
         renderer.addBall(Ball.WHITE);
-        
+
         Table table = new Table();
         renderer.setTable(table);
     }
