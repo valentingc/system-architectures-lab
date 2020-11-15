@@ -238,12 +238,12 @@ public class Renderer extends AnimationTimer {
         if (this.drawingState == null) {
             return;
         }
-        this.gc.setTransform(this.poolCoords);
+        //this.gc.setTransform(this.poolCoords);
 
         if (this.drawingState.equals(CueDrawingState.PRESSED)) {
             // kp was hier passieren soll.. :(
             this.gc.beginPath();
-            this.gc.moveTo(this.xStart, this.yStart);
+            this.gc.moveTo(this.xStart,this.yStart);
             this.gc.stroke();
         } else if (this.drawingState.equals(CueDrawingState.DRAGGED)) {
             this.gc.lineTo(this.xStart * SCALE, this.yStart * SCALE);
@@ -350,10 +350,8 @@ public class Renderer extends AnimationTimer {
     }
 
 
-    public void setCueCoords(double xStart, double xEnd, double yStart, double yEnd) {
+    public void setCueCoords(double xStart, double yStart) {
         this.xStart = xStart;
-        this.xEnd = xEnd;
         this.yStart = yStart;
-        this.yEnd = yEnd;
     }
 }

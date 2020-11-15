@@ -30,7 +30,7 @@ public class Game {
 
         xStart = pX;
         yStart = pY;
-        this.renderer.setCueCoords(this.xStart, pX, this.yStart, pY);
+        this.renderer.setCueCoords(pX, pY);
         this.renderer.setDrawingState(Renderer.CueDrawingState.PRESSED);
     }
 
@@ -43,7 +43,7 @@ public class Game {
         double pY = this.renderer.screenToPhysicsY(y);
 
         // aufhören zeichnen
-        this.renderer.setCueCoords(this.xStart, pX, this.yStart, pY);
+        this.renderer.setCueCoords(pX, pY);
         this.renderer.setDrawingState(Renderer.CueDrawingState.RELEASED);
     }
 
@@ -55,7 +55,7 @@ public class Game {
         // zeichnen
         double pX = renderer.screenToPhysicsX(x);
         double pY = renderer.screenToPhysicsY(y);
-        this.renderer.setCueCoords(this.xStart, pX, this.yStart, pY);
+        this.renderer.setCueCoords(pX, pY);
         this.renderer.setDrawingState(Renderer.CueDrawingState.DRAGGED);
 
     }
