@@ -1,18 +1,23 @@
 package at.fhv.sysarch.lab2.game;
 
 import at.fhv.sysarch.lab2.physics.PhysicsEngine;
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import at.fhv.sysarch.lab2.rendering.Renderer;
+import javafx.geometry.Point2D;
 import javafx.scene.input.MouseEvent;
+import org.dyn4j.geometry.Vector2;
 
 public class Game {
     private final Renderer renderer;
     private final PhysicsEngine engine;
     private double xStart;
     private double yStart;
+    private double xEnd;
+    private double yEnd;
 
     public Game(Renderer renderer, PhysicsEngine engine) {
         this.renderer = renderer;
@@ -24,14 +29,11 @@ public class Game {
         double x = e.getX();
         double y = e.getY();
 
-        double pX = this.renderer.screenToPhysicsX(x);
-        double pY = this.renderer.screenToPhysicsY(y);
         System.out.println("Mouse pressed");
-
-        xStart = pX;
-        yStart = pY;
-        this.renderer.setCueCoords(pX, pY);
-        this.renderer.setDrawingState(Renderer.CueDrawingState.PRESSED);
+        this.xStart = x;
+        this.yStart = y;
+        this.xEnd = x;
+        this.yEnd = y;
     }
 
     public void onMouseReleased(MouseEvent e) {
@@ -39,11 +41,12 @@ public class Game {
         double x = e.getX();
         double y = e.getY();
 
-        double pX = this.renderer.screenToPhysicsX(x);
-        double pY = this.renderer.screenToPhysicsY(y);
+        Point2D point = getCalculatedPoint(x, y);
+        var length = getLength(point);
 
-        // aufhören zeichnen
-        this.renderer.setCueCoords(pX, pY);
+        //Ball.WHITE.getBody().applyImpulse(new Vector2(point.getX(), point.getY()));
+        // zeichnen
+        this.renderer.setCueCoords(point.getX() * length, point.getY() * length);
         this.renderer.setDrawingState(Renderer.CueDrawingState.RELEASED);
     }
 
@@ -51,13 +54,35 @@ public class Game {
         System.out.println("Mouse dragged");
         double x = e.getX();
         double y = e.getY();
+        this.xEnd = x;
+        this.yEnd = y;
+
+        Point2D point = getCalculatedPoint(x, y);
+        var length = getLength(point);
 
         // zeichnen
-        double pX = renderer.screenToPhysicsX(x);
-        double pY = renderer.screenToPhysicsY(y);
-        this.renderer.setCueCoords(pX, pY);
+        this.renderer.setCueCoords(point.getX() * length, point.getY() * length);
         this.renderer.setDrawingState(Renderer.CueDrawingState.DRAGGED);
 
+    }
+
+    private Point2D getCalculatedPoint(double x, double y) {
+        var deltaX = this.xStart - x;
+        var deltaY = this.yStart - y;
+
+        Point2D point = new Point2D(deltaX, deltaY);
+        point = point.normalize();
+
+        return point;
+    }
+
+    private double getLength(Point2D point) {
+        var length = (point.magnitude() / 10) / 4;
+        if (length > 10) {
+            length = 10;
+        }
+
+        return length;
     }
 
     private void placeBalls(List<Ball> balls) {

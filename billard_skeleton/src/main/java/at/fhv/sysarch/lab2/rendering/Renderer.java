@@ -49,6 +49,7 @@ public class Renderer extends AnimationTimer {
     private double yStart;
     private double xEnd;
     private double yEnd;
+    private Ball whiteBall;
     private CueDrawingState drawingState;
 
     private Optional<FrameListener> frameListener;
@@ -100,6 +101,9 @@ public class Renderer extends AnimationTimer {
     }
 
     public void addBall(Ball b) {
+        if (b.isWhite()) {
+            this.whiteBall = b;
+        }
         this.balls.add(b);
     }
 
@@ -241,20 +245,9 @@ public class Renderer extends AnimationTimer {
         //this.gc.setTransform(this.poolCoords);
 
 
-        if (this.drawingState.equals(CueDrawingState.PRESSED)) {
-            // kp was hier passieren soll.. :(
-            //this.gc.beginPath();
-            //this.gc.moveTo(this.xStart,this.yStart);
-            //this.gc.stroke();
-            this.gc.strokeLine(0,0,this.xStart * SCALE,this.yStart * SCALE);
-        } else if (this.drawingState.equals(CueDrawingState.DRAGGED)) {
-
-            //this.gc.lineTo(this.xStart * SCALE, this.yStart * SCALE);
-            //this.gc.stroke();
-            this.gc.strokeLine(0,0, this.xStart * SCALE,this.yStart * SCALE);
+        if (this.drawingState.equals(CueDrawingState.PRESSED) || this.drawingState.equals(CueDrawingState.DRAGGED)) {
+            this.gc.strokeLine(0,0,this.xStart * 20,this.yStart * 20);
         }
-
-
     }
 
     private void drawFPS(double dt) {
@@ -351,13 +344,13 @@ public class Renderer extends AnimationTimer {
         DRAGGED,
         RELEASED
     }
+
     public void setDrawingState(CueDrawingState drawingState) {
         this.drawingState = drawingState;
     }
 
-
     public void setCueCoords(double xStart, double yStart) {
-        this.xStart = xStart;
-        this.yStart = yStart;
+        this.xStart = xStart * -1;
+        this.yStart = yStart * -1;
     }
 }
