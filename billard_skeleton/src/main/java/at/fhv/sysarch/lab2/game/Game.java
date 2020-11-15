@@ -30,6 +30,8 @@ public class Game {
 
         xStart = pX;
         yStart = pY;
+        this.renderer.setCueCoords(this.xStart, pX, this.yStart, pY);
+        this.renderer.setIsDrawingCue(true);
     }
 
     public void onMouseReleased(MouseEvent e) {
@@ -42,6 +44,7 @@ public class Game {
 
         // aufhören zeichnen
         this.renderer.setCueCoords(this.xStart, pX, this.yStart, pY);
+        this.renderer.setIsDrawingCue(true);
     }
 
     public void setOnMouseDragged(MouseEvent e) {
@@ -52,6 +55,7 @@ public class Game {
         // zeichnen
         double pX = renderer.screenToPhysicsX(x);
         double pY = renderer.screenToPhysicsY(y);
+        this.renderer.setCueCoords(this.xStart, pX, this.yStart, pY);
 
     }
 

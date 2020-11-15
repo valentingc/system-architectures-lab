@@ -49,6 +49,7 @@ public class Renderer extends AnimationTimer {
     private double yStart;
     private double xEnd;
     private double yEnd;
+    private boolean isDrawingCue;
 
     private Optional<FrameListener> frameListener;
 
@@ -234,7 +235,14 @@ public class Renderer extends AnimationTimer {
     private void drawCue() {
         // (0/0) mitte von der weißen kugel
         // TODO: draw cue
-        this.gc.stro
+        if (this.isDrawingCue) {
+            // kp was hier passieren soll.. :(
+            this.gc.beginPath();
+            this.gc.moveTo(this.xStart, this.yStart);
+            this.gc.stroke();
+        } else {
+            // ??
+        }
     }
 
     private void drawFPS(double dt) {
@@ -323,6 +331,10 @@ public class Renderer extends AnimationTimer {
         // center of phyics circle is in the center
         // javafx draws ovals from top left corner
         this.gc.fillOval(-r, -r, d, d);
+    }
+
+    public void setIsDrawingCue(boolean isDrawing) {
+        this.isDrawingCue = isDrawing;
     }
 
     public void setCueCoords(double xStart, double xEnd, double yStart, double yEnd) {
