@@ -1,6 +1,6 @@
 package at.fhv.sysarch.lab2.physics;
 
-public interface ObjectsRestListenerInterface {
+public interface ObjectsRestListener {
     void onEndAllObjectsRest();
 
     void onStartAllObjectsRest();

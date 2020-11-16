@@ -2,6 +2,8 @@ package at.fhv.sysarch.lab2.physics;
 
 import at.fhv.sysarch.lab2.game.Ball;
 import at.fhv.sysarch.lab2.game.Table;
+import java.util.LinkedList;
+import java.util.List;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.dynamics.contact.ContactListener;
@@ -16,15 +18,21 @@ import org.dyn4j.geometry.Vector2;
  */
 public class PhysicsEngine implements ContactListener {
     private final World world;
+    private List<BallPocketedListener> ballPocketListeners;
 
     public PhysicsEngine() {
         world = new World();
         world.setGravity(World.ZERO_GRAVITY);
         world.addListener(this);
+        ballPocketListeners = new LinkedList<>();
     }
 
     public void addBodyFromGame(Body body) {
         world.addBody(body);
+    }
+
+    public void removeBodyFromGame(Body body) {
+        world.removeBody(body);
     }
 
     public void update(double deltaTime) {
@@ -46,13 +54,13 @@ public class PhysicsEngine implements ContactListener {
 
     }
 
+    public boolean addBallPocketedListener(BallPocketedListener ballPocketedListener) {
+        return ballPocketListeners.add(ballPocketedListener);
+    }
 
-
-
-
-
-
-
+    public boolean removeBallPocketedListener(BallPocketedListener o) {
+        return ballPocketListeners.remove(o);
+    }
 
     private boolean isAPocketedBall(Body body1, Body body2, PersistedContactPoint point) {
         // welt-koordinaten
@@ -90,6 +98,10 @@ public class PhysicsEngine implements ContactListener {
 
                 if (isPocketed){
                     System.out.println("11111Yep, ball is pocketed");
+                    System.out.println(b.getColor().toString());
+                }
+                for (BallPocketedListener listener : ballPocketListeners) {
+                    listener.onBallPocketed(b);
                 }
 
                 // wieso eigene klasse -> direkt game
@@ -102,6 +114,10 @@ public class PhysicsEngine implements ContactListener {
 
                 if (isPocketed){
                     System.out.println("22222Yep, ball is pocketed");
+                    System.out.println(b.getColor().toString());
+                }
+                for (BallPocketedListener listener : ballPocketListeners) {
+                    listener.onBallPocketed(b);
                 }
             }
         }

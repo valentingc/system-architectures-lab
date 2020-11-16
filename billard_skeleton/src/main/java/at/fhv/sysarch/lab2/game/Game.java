@@ -1,5 +1,6 @@
 package at.fhv.sysarch.lab2.game;
 
+import at.fhv.sysarch.lab2.physics.BallPocketedListener;
 import at.fhv.sysarch.lab2.physics.PhysicsEngine;
 import at.fhv.sysarch.lab2.rendering.Renderer;
 import javafx.geometry.Point2D;
@@ -10,7 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class Game {
+public class Game implements BallPocketedListener {
     private final Renderer renderer;
     private final PhysicsEngine engine;
     private double xStart;
@@ -20,6 +21,7 @@ public class Game {
         this.renderer = renderer;
         this.engine = engine;
         this.initWorld();
+        this.engine.addBallPocketedListener(this);
     }
 
     public void onMousePressed(MouseEvent e) {
@@ -140,5 +142,14 @@ public class Game {
         Table table = new Table();
         engine.addBodyFromGame(table.getBody());
         renderer.setTable(table);
+    }
+
+    @Override
+    public boolean onBallPocketed(Ball b) {
+        System.out.println("onBallPocketed called");
+        b.getBody().setLinearVelocity(0,0); // fixes a problem that the ball never stops.
+        this.renderer.removeBall(b);
+        this.engine.addBodyFromGame(b.getBody());
+        return false;
     }
 }
