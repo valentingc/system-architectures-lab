@@ -3,6 +3,7 @@ package at.fhv.sysarch.lab2.rendering;
 import at.fhv.sysarch.lab2.game.Ball;
 import at.fhv.sysarch.lab2.game.Table;
 import at.fhv.sysarch.lab2.game.Table.TablePart;
+import at.fhv.sysarch.lab2.physics.PhysicsEngine;
 import javafx.animation.AnimationTimer;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
@@ -24,6 +25,7 @@ public class Renderer extends AnimationTimer {
     private Table table;
 
     private final GraphicsContext gc;
+    private final PhysicsEngine engine;
 
     private final double centerX;
     private final double centerY;
@@ -53,8 +55,9 @@ public class Renderer extends AnimationTimer {
 
     private Optional<FrameListener> frameListener;
 
-    public Renderer(final GraphicsContext gc, int sceneWidth, int sceneHeight) {
+    public Renderer(final GraphicsContext gc, int sceneWidth, int sceneHeight, PhysicsEngine engine) {
         this.gc = gc;
+        this.engine = engine;
 
         this.balls = new ArrayList<>();
 
@@ -144,6 +147,9 @@ public class Renderer extends AnimationTimer {
         double dt = (double) (now - lastUpdate) / 1000_000_000.0;
 
         this.frameListener.ifPresent(l -> l.onFrame(dt));
+
+        // TODO - FrameListener sollte das machen!
+        this.engine.update(dt);
 
         this.clearWithColorBackground();
         this.drawTable();

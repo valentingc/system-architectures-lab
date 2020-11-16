@@ -20,12 +20,6 @@ public class Game {
         this.renderer = renderer;
         this.engine = engine;
         this.initWorld();
-
-        // Start world simulation stepping
-        this.engine.begin(
-                this.engine.getWorld().getStep(),
-                this.engine.getWorld()
-        );
     }
 
     public void onMousePressed(MouseEvent e) {
@@ -113,6 +107,7 @@ public class Game {
 
             b.setPosition(x, y);
             b.getBody().setLinearVelocity(0, 0);
+            engine.addBodyFromGame(b.getBody());
             renderer.addBall(b);
 
             row++;
@@ -129,7 +124,6 @@ public class Game {
         List<Ball> balls = new ArrayList<>();
 
         for (Ball b : Ball.values()) {
-            this.engine.getWorld().addBody(b.getBody());
             if (b == Ball.WHITE)
                 continue;
 
@@ -139,10 +133,11 @@ public class Game {
         this.placeBalls(balls);
 
         Ball.WHITE.setPosition(Table.Constants.WIDTH * 0.25, 0);
-
+        engine.addBodyFromGame(Ball.WHITE.getBody());
         renderer.addBall(Ball.WHITE);
 
         Table table = new Table();
+        engine.addBodyFromGame(table.getBody());
         renderer.setTable(table);
     }
 }
