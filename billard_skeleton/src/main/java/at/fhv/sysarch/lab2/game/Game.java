@@ -37,7 +37,7 @@ public class Game {
         double length = getLength(point);
         point = point.normalize();
 
-        Ball.WHITE.getBody().applyImpulse(new Vector2(point.getX(), point.getY()));
+        Ball.WHITE.getBody().applyImpulse(new Vector2(point.getX() * length, point.getY() * length));
 
         // Init cue drawing
         this.renderer.setCueCoords(point.getX() * length, point.getY() * length);
