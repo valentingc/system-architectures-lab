@@ -149,7 +149,7 @@ public class Game implements BallPocketedListener {
         System.out.println("onBallPocketed called");
         b.getBody().setLinearVelocity(0,0); // fixes a problem that the ball never stops.
         this.renderer.removeBall(b);
-        this.engine.addBodyFromGame(b.getBody());
+        this.engine.removeBodyFromGame(b.getBody());
         return false;
     }
 }
