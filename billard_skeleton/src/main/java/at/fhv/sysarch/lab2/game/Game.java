@@ -37,6 +37,7 @@ public class Game {
         double length = getLength(point);
         point = point.normalize();
 
+        // TODO - Move to PhysicsEngine? How to communicate?
         Ball.WHITE.getBody().applyImpulse(new Vector2(point.getX() * length, point.getY() * length));
 
         // Init cue drawing

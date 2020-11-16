@@ -45,6 +45,14 @@ public class PhysicsEngine implements ContactListener {
 
     @Override
     public boolean persist(PersistedContactPoint point) {
+        Body body1 = point.getBody1();
+        Body body2 = point.getBody2();
+
+        if (point.isSensor()) {
+            // TODO - Enough overlap?
+            //  - how to use listeners?
+        }
+
         return true;
     }
 
