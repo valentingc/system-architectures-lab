@@ -46,6 +46,35 @@ public class PhysicsEngine implements ContactListener {
 
     }
 
+
+
+
+
+
+
+
+
+    private boolean isAPocketedBall(Body body1, Body body2, PersistedContactPoint point) {
+        // welt-koordinaten
+        Vector2 ballPosition = body1.getTransform().getTranslation();
+
+        // relativ zu dem, was der tisch ist -> pocket ist teil vom tisch
+        Vector2 pocketPosition = body2.getTransform().getTranslation();
+        Vector2 pocketCenter = point.getFixture2().getShape().getCenter();
+
+        // welt-koordinaten
+        Vector2 pocketInWorld = pocketPosition.add(pocketCenter);
+
+        Vector2 difference = ballPosition.difference(pocketInWorld);
+        double magnitudeDifference = difference.getMagnitude();// was für eine größenordnung
+        // ist der unterschied
+        // abstand kleiner als delta -> pocketed
+        if (magnitudeDifference <= 0.035) {
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public boolean persist(PersistedContactPoint point) {
         Body body1 = point.getBody1();
@@ -55,33 +84,25 @@ public class PhysicsEngine implements ContactListener {
             // TODO - Enough overlap?
             //  - how to use listeners?
             if (body1.getUserData() instanceof Ball) {
-                // welt-koordinaten
-                Vector2 ballPosition = body1.getTransform().getTranslation();
+                // body1 is ball
+                Ball b = (Ball) body1.getUserData();
+                boolean isPocketed = isAPocketedBall(body1, body2, point);
 
-                // relativ zu dem, was der tisch ist -> pocket ist teil vom tisch
-                Vector2 pocketPosition = body2.getTransform().getTranslation();
-                Vector2 pocketCenter = point.getFixture2().getShape().getCenter();
-
-                // welt-koordinaten
-                Vector2 pocketInWorld = pocketPosition.add(pocketCenter);
-
-                Vector2 difference = ballPosition.difference(pocketInWorld);
-                double magnitudeDifference = difference.getMagnitude();// was für eine größenordnung
-                // ist der
-                if (magnitudeDifference <= 0.035) {
-                    System.out.println("GELOCHT");
+                if (isPocketed){
+                    System.out.println("11111Yep, ball is pocketed");
                 }
-                // unterschied
-                // abstand kleiner als delta -> pocketed
-
-
 
                 // wieso eigene klasse -> direkt game
                 // notify listener here
 
-                // body1 is ball
-            } else {
+            } else if (body2.getUserData() instanceof Ball) {
+                Ball b = (Ball) body2.getUserData();
                 // body2 is ball
+                boolean isPocketed = isAPocketedBall(body2,body1, point);
+
+                if (isPocketed){
+                    System.out.println("22222Yep, ball is pocketed");
+                }
             }
         }
 
