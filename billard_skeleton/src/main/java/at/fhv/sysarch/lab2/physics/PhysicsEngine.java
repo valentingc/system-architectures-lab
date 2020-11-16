@@ -2,9 +2,12 @@ package at.fhv.sysarch.lab2.physics;
 
 import at.fhv.sysarch.lab2.game.Ball;
 import at.fhv.sysarch.lab2.game.Table;
+import com.sun.jdi.ObjectReference;
 import java.util.LinkedList;
 import java.util.List;
 import org.dyn4j.dynamics.Body;
+import org.dyn4j.dynamics.Step;
+import org.dyn4j.dynamics.StepListener;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.dynamics.contact.ContactListener;
 import org.dyn4j.dynamics.contact.ContactPoint;
@@ -16,15 +19,17 @@ import org.dyn4j.geometry.Vector2;
  * @author Valentin Goronjic
  * @author Dominic Luidold
  */
-public class PhysicsEngine implements ContactListener {
+public class PhysicsEngine implements ContactListener, StepListener {
     private final World world;
     private List<BallPocketedListener> ballPocketListeners;
+    private List<ObjectsRestListener> objectRestListeners;
 
     public PhysicsEngine() {
         world = new World();
         world.setGravity(World.ZERO_GRAVITY);
         world.addListener(this);
         ballPocketListeners = new LinkedList<>();
+        objectRestListeners = new LinkedList<>();
     }
 
     public void addBodyFromGame(Body body) {
@@ -41,7 +46,6 @@ public class PhysicsEngine implements ContactListener {
 
     @Override
     public void sensed(ContactPoint point) {
-
     }
 
     @Override
@@ -60,6 +64,14 @@ public class PhysicsEngine implements ContactListener {
 
     public boolean removeBallPocketedListener(BallPocketedListener o) {
         return ballPocketListeners.remove(o);
+    }
+
+    public boolean addObjectRestListener(ObjectsRestListener objectRestListener) {
+        return objectRestListeners.add(objectRestListener);
+    }
+
+    public boolean removeObjectRestListener(ObjectsRestListener objectRestListener) {
+        return objectRestListeners.remove(objectRestListener);
     }
 
     private boolean isAPocketedBall(Body body1, Body body2, PersistedContactPoint point) {
@@ -132,6 +144,41 @@ public class PhysicsEngine implements ContactListener {
 
     @Override
     public void postSolve(SolvedContactPoint point) {
+
+    }
+
+    @Override
+    public void begin(Step step, World world) {
+        boolean areBallsMoving = false;
+        for (Ball b : Ball.values()) {
+            if (!b.getBody().getLinearVelocity().equals(new Vector2(0, 0))) {
+                areBallsMoving = true;
+                break;
+            }
+        }
+        if (areBallsMoving) {
+            for (ObjectsRestListener listener : objectRestListeners) {
+                listener.onStartAllObjectsRest();
+            }
+        } else {
+            for (ObjectsRestListener listener : objectRestListeners) {
+                listener.onEndAllObjectsRest();
+            }
+        }
+    }
+
+    @Override
+    public void updatePerformed(Step step, World world) {
+
+    }
+
+    @Override
+    public void postSolve(Step step, World world) {
+
+    }
+
+    @Override
+    public void end(Step step, World world) {
 
     }
 }

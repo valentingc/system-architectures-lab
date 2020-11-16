@@ -1,8 +1,10 @@
 package at.fhv.sysarch.lab2.game;
 
 import at.fhv.sysarch.lab2.physics.BallPocketedListener;
+import at.fhv.sysarch.lab2.physics.ObjectsRestListener;
 import at.fhv.sysarch.lab2.physics.PhysicsEngine;
 import at.fhv.sysarch.lab2.rendering.Renderer;
+import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 import javafx.geometry.Point2D;
 import javafx.scene.input.MouseEvent;
 import org.dyn4j.geometry.Vector2;
@@ -11,17 +13,20 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class Game implements BallPocketedListener {
+public class Game implements BallPocketedListener, ObjectsRestListener {
     private final Renderer renderer;
     private final PhysicsEngine engine;
     private double xStart;
     private double yStart;
+    private boolean isFirstPlayer;
 
     public Game(Renderer renderer, PhysicsEngine engine) {
+        this.isFirstPlayer = true;
         this.renderer = renderer;
         this.engine = engine;
         this.initWorld();
         this.engine.addBallPocketedListener(this);
+        this.engine.addObjectRestListener(this);
     }
 
     public void onMousePressed(MouseEvent e) {
@@ -148,8 +153,26 @@ public class Game implements BallPocketedListener {
     public boolean onBallPocketed(Ball b) {
         System.out.println("onBallPocketed called");
         b.getBody().setLinearVelocity(0,0); // fixes a problem that the ball never stops.
+        if (b.isWhite()) {
+            System.out.println("It's as a foul!");
+            this.renderer.setFoulMessage("Foul: White ball has been pocketed");
+        }
+
         this.renderer.removeBall(b);
         this.engine.removeBodyFromGame(b.getBody());
+
+
+
         return false;
+    }
+
+    @Override
+    public void onEndAllObjectsRest() {
+        System.out.println("END objects rest");
+    }
+
+    @Override
+    public void onStartAllObjectsRest() {
+        System.out.println("START objects rest");
     }
 }
