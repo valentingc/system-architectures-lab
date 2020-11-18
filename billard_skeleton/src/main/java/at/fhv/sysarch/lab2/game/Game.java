@@ -7,6 +7,7 @@ import at.fhv.sysarch.lab2.rendering.Renderer;
 import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 import javafx.geometry.Point2D;
 import javafx.scene.input.MouseEvent;
+import org.checkerframework.checker.units.qual.Current;
 import org.dyn4j.geometry.Vector2;
 
 import java.util.ArrayList;
@@ -14,14 +15,26 @@ import java.util.Collections;
 import java.util.List;
 
 public class Game implements BallPocketedListener, ObjectsRestListener {
+    public enum CurrentPlayer {
+        PLAYER_ONE("Player 1"),
+        PLAYER_TWO("Player 2");
+        private String prettyName;
+
+        CurrentPlayer(String prettyName) {
+            this.prettyName = prettyName;
+        }
+
+        public String getPrettyName() {
+            return prettyName;
+        }
+    }
     private final Renderer renderer;
     private final PhysicsEngine engine;
     private double xStart;
     private double yStart;
-    private boolean isFirstPlayer;
+    private CurrentPlayer currentPlayer;
 
     public Game(Renderer renderer, PhysicsEngine engine) {
-        this.isFirstPlayer = true;
         this.renderer = renderer;
         this.engine = engine;
         this.initWorld();
@@ -140,15 +153,32 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
 
         this.placeBalls(balls);
 
-        Ball.WHITE.setPosition(Table.Constants.WIDTH * 0.25, 0);
-        engine.addBodyFromGame(Ball.WHITE.getBody());
-        renderer.addBall(Ball.WHITE);
+        this.resetWhiteBall();;
 
         Table table = new Table();
         engine.addBodyFromGame(table.getBody());
         renderer.setTable(table);
+
+        // set current player
+        this.currentPlayer = CurrentPlayer.PLAYER_ONE;
     }
 
+    private void switchPlayers() {
+        if (this.currentPlayer.equals(CurrentPlayer.PLAYER_ONE)) {
+            this.currentPlayer = CurrentPlayer.PLAYER_TWO;
+        } else {
+            this.currentPlayer = CurrentPlayer.PLAYER_ONE;
+        }
+        this.renderer.setActionMessage(
+            "Switching Players, next player: "
+            + this.currentPlayer.getPrettyName()
+        );
+    }
+    private void resetWhiteBall() {
+        Ball.WHITE.setPosition(Table.Constants.WIDTH * 0.25, 0);
+        engine.addBodyFromGame(Ball.WHITE.getBody());
+        renderer.addBall(Ball.WHITE);
+    }
     @Override
     public boolean onBallPocketed(Ball b) {
         System.out.println("onBallPocketed called");
@@ -156,12 +186,14 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
         if (b.isWhite()) {
             System.out.println("It's as a foul!");
             this.renderer.setFoulMessage("Foul: White ball has been pocketed");
+
+            this.resetWhiteBall();
+
+            this.switchPlayers();
         }
 
         this.renderer.removeBall(b);
         this.engine.removeBodyFromGame(b.getBody());
-
-
 
         return false;
     }
