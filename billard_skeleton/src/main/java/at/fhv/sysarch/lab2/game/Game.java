@@ -174,11 +174,13 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
             + this.currentPlayer.getPrettyName()
         );
     }
+
     private void resetWhiteBall() {
         Ball.WHITE.setPosition(Table.Constants.WIDTH * 0.25, 0);
         engine.addBodyFromGame(Ball.WHITE.getBody());
         renderer.addBall(Ball.WHITE);
     }
+
     @Override
     public boolean onBallPocketed(Ball b) {
         System.out.println("onBallPocketed called");
