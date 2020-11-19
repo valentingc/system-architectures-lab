@@ -40,6 +40,7 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
     private boolean hasRoundStarted = false;
     private boolean gameNotified = false;
     private boolean hasWhiteBallTouchedOtherBalls = false;
+    private Vector2 whiteBallPositionBeforeFoul;
 
     public Game(Renderer renderer, PhysicsEngine engine) {
         this.renderer = renderer;
@@ -160,7 +161,8 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
 
         this.placeBalls(balls);
 
-        this.resetWhiteBall();
+        Ball.WHITE.setPosition(Table.Constants.WIDTH * 0.25, 0);
+        whiteBallPositionBeforeFoul = Ball.WHITE.getBody().getTransform().getTranslation();
 
         // Add white ball
         engine.addBodyFromGame(Ball.WHITE.getBody());
@@ -186,7 +188,8 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
     }
 
     private void resetWhiteBall() {
-        Ball.WHITE.setPosition(Table.Constants.WIDTH * 0.25, 0);
+        Ball.WHITE.getBody().setLinearVelocity(0,0);
+        Ball.WHITE.setPosition(whiteBallPositionBeforeFoul.x, whiteBallPositionBeforeFoul.y);
         if (hasWhiteBallBeenPocketed) {
             engine.addBodyFromGame(Ball.WHITE.getBody());
             renderer.addBall(Ball.WHITE);
@@ -232,9 +235,12 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
         if (hasRoundStarted && !gameNotified && !hasWhiteBallTouchedOtherBalls) {
             gameNotified = true;
             this.declareFoul("White ball hasn't touched any other balls!");
-        } else if (hasRoundStarted && !gameNotified && hasWhiteBallTouchedOtherBalls && !hasNonWhiteBallBeenPocketed) {
+        } else if (hasRoundStarted && !gameNotified && !hasNonWhiteBallBeenPocketed) {
             this.switchPlayers();
         }
+
+        hasWhiteBallTouchedOtherBalls = false;
+        whiteBallPositionBeforeFoul = Ball.WHITE.getBody().getTransform().getTranslation();
     }
 
     private void declareFoul(String message) {
