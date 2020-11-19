@@ -4,10 +4,8 @@ import at.fhv.sysarch.lab2.physics.BallPocketedListener;
 import at.fhv.sysarch.lab2.physics.ObjectsRestListener;
 import at.fhv.sysarch.lab2.physics.PhysicsEngine;
 import at.fhv.sysarch.lab2.rendering.Renderer;
-import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 import javafx.geometry.Point2D;
 import javafx.scene.input.MouseEvent;
-import org.checkerframework.checker.units.qual.Current;
 import org.dyn4j.geometry.Vector2;
 
 import java.util.ArrayList;
@@ -28,11 +26,20 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
             return prettyName;
         }
     }
+
     private final Renderer renderer;
     private final PhysicsEngine engine;
     private double xStart;
     private double yStart;
     private CurrentPlayer currentPlayer;
+
+    private int player1Score = 0;
+    private int player2Score = 0;
+    private boolean hasWhiteBallBeenPocketed = false;
+    private boolean hasNonWhiteBallBeenPocketed = false;
+    private boolean hasRoundStarted = false;
+    private boolean gameNotified = false;
+    private boolean hasWhiteBallTouchedOtherBalls = false;
 
     public Game(Renderer renderer, PhysicsEngine engine) {
         this.renderer = renderer;
@@ -153,7 +160,11 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
 
         this.placeBalls(balls);
 
-        this.resetWhiteBall();;
+        this.resetWhiteBall();
+
+        // Add white ball
+        engine.addBodyFromGame(Ball.WHITE.getBody());
+        renderer.addBall(Ball.WHITE);
 
         Table table = new Table();
         engine.addBodyFromGame(table.getBody());
@@ -164,49 +175,89 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
     }
 
     private void switchPlayers() {
+        hasRoundStarted = false;
+
         if (this.currentPlayer.equals(CurrentPlayer.PLAYER_ONE)) {
             this.currentPlayer = CurrentPlayer.PLAYER_TWO;
         } else {
             this.currentPlayer = CurrentPlayer.PLAYER_ONE;
         }
-        this.renderer.setActionMessage(
-            "Switching Players, next player: "
-            + this.currentPlayer.getPrettyName()
-        );
+        this.renderer.setActionMessage("Switching Players, next player: " + this.currentPlayer.getPrettyName());
     }
 
     private void resetWhiteBall() {
         Ball.WHITE.setPosition(Table.Constants.WIDTH * 0.25, 0);
-        engine.addBodyFromGame(Ball.WHITE.getBody());
-        renderer.addBall(Ball.WHITE);
+        if (hasWhiteBallBeenPocketed) {
+            engine.addBodyFromGame(Ball.WHITE.getBody());
+            renderer.addBall(Ball.WHITE);
+        }
     }
 
     @Override
     public boolean onBallPocketed(Ball b) {
         System.out.println("onBallPocketed called");
-        b.getBody().setLinearVelocity(0,0); // fixes a problem that the ball never stops.
-        if (b.isWhite()) {
-            System.out.println("It's as a foul!");
-            this.renderer.setFoulMessage("Foul: White ball has been pocketed");
-
-            this.resetWhiteBall();
-
-            this.switchPlayers();
-        }
+        b.getBody().setLinearVelocity(0, 0); // fixes a problem that the ball never stops.
 
         this.renderer.removeBall(b);
         this.engine.removeBodyFromGame(b.getBody());
+
+        if (b.isWhite()) {
+            hasWhiteBallBeenPocketed = true;
+            hasNonWhiteBallBeenPocketed = false;
+            this.declareFoul("White ball has been pocketed");
+        } else {
+            hasNonWhiteBallBeenPocketed = true;
+            this.updatePoints(1);
+        }
 
         return false;
     }
 
     @Override
-    public void onEndAllObjectsRest() {
-        System.out.println("END objects rest");
+    public void allObjectsMoving() {
+        this.clearMessages();
+        hasRoundStarted = true;
+        gameNotified = false;
+
+        for (Ball b : Ball.values()) {
+            if (!b.isWhite() && !b.getBody().getLinearVelocity().equals(new Vector2(0, 0))) {
+                hasWhiteBallTouchedOtherBalls = true;
+                break;
+            }
+        }
     }
 
     @Override
-    public void onStartAllObjectsRest() {
-        System.out.println("START objects rest");
+    public void allObjectsRest() {
+        if (hasRoundStarted && !gameNotified && !hasWhiteBallTouchedOtherBalls) {
+            gameNotified = true;
+            this.declareFoul("White ball hasn't touched any other balls!");
+        } else if (hasRoundStarted && !gameNotified && hasWhiteBallTouchedOtherBalls && !hasNonWhiteBallBeenPocketed) {
+            this.switchPlayers();
+        }
+    }
+
+    private void declareFoul(String message) {
+        System.out.println("It's as a foul!");
+        this.renderer.setFoulMessage("Foul: " + message);
+
+        this.updatePoints(-1);
+        this.resetWhiteBall();
+        this.switchPlayers();
+    }
+
+    private void updatePoints(int point) {
+        if (currentPlayer.equals(CurrentPlayer.PLAYER_ONE)) {
+            player1Score += point;
+            renderer.setPlayer1Score(player1Score);
+        } else {
+            player2Score += point;
+            renderer.setPlayer2Score(player2Score);
+        }
+    }
+
+    private void clearMessages() {
+        renderer.setFoulMessage("");
+        renderer.setActionMessage("");
     }
 }
