@@ -33,13 +33,17 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
     private double yStart;
     private CurrentPlayer currentPlayer;
 
+    /* Player scores */
     private int player1Score = 0;
     private int player2Score = 0;
+
+    private boolean ballsMoving = false;
+    private boolean hasRoundStarted = false;
+    private boolean gameHandledMove = false;
     private boolean hasWhiteBallBeenPocketed = false;
     private boolean hasNonWhiteBallBeenPocketed = false;
-    private boolean hasRoundStarted = false;
-    private boolean gameNotified = false;
     private boolean hasWhiteBallTouchedOtherBalls = false;
+
     private Vector2 whiteBallPositionBeforeFoul;
 
     public Game(Renderer renderer, PhysicsEngine engine) {
@@ -51,6 +55,10 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
     }
 
     public void onMousePressed(MouseEvent e) {
+        if (ballsMoving) {
+            return;
+        }
+
         this.xStart = e.getX();
         this.yStart = e.getY();
 
@@ -65,8 +73,9 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
         double length = getLength(point);
         point = point.normalize();
 
-        // TODO - Move to PhysicsEngine? How to communicate?
-        Ball.WHITE.getBody().applyImpulse(new Vector2(point.getX() * length, point.getY() * length));
+        if (!ballsMoving) {
+            Ball.WHITE.getBody().applyImpulse(new Vector2(point.getX() * length, point.getY() * length));
+        }
 
         // Init cue drawing
         this.renderer.setCueCoords(point.getX() * length, point.getY() * length);
@@ -74,6 +83,10 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
     }
 
     public void setOnMouseDragged(MouseEvent e) {
+        if (ballsMoving) {
+            return;
+        }
+
         double x = e.getX();
         double y = e.getY();
 
@@ -178,6 +191,7 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
 
     private void switchPlayers() {
         hasRoundStarted = false;
+        gameHandledMove = false;
 
         if (this.currentPlayer.equals(CurrentPlayer.PLAYER_ONE)) {
             this.currentPlayer = CurrentPlayer.PLAYER_TWO;
@@ -209,6 +223,7 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
             hasNonWhiteBallBeenPocketed = false;
             this.declareFoul("White ball has been pocketed");
         } else {
+            hasWhiteBallBeenPocketed = false;
             hasNonWhiteBallBeenPocketed = true;
             this.updatePoints(1);
         }
@@ -219,8 +234,9 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
     @Override
     public void allObjectsMoving() {
         this.clearMessages();
+        ballsMoving = true;
         hasRoundStarted = true;
-        gameNotified = false;
+        hasWhiteBallTouchedOtherBalls = false;
 
         for (Ball b : Ball.values()) {
             if (!b.isWhite() && !b.getBody().getLinearVelocity().equals(new Vector2(0, 0))) {
@@ -232,19 +248,19 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
 
     @Override
     public void allObjectsRest() {
-        if (hasRoundStarted && !gameNotified && !hasWhiteBallTouchedOtherBalls) {
-            gameNotified = true;
+        if (hasRoundStarted && !gameHandledMove && (!hasNonWhiteBallBeenPocketed && !hasWhiteBallTouchedOtherBalls)) {
+            gameHandledMove = true;
             this.declareFoul("White ball hasn't touched any other balls!");
-        } else if (hasRoundStarted && !gameNotified && !hasNonWhiteBallBeenPocketed) {
+        } else if (hasRoundStarted && !gameHandledMove && !hasNonWhiteBallBeenPocketed) {
+            gameHandledMove = true;
             this.switchPlayers();
         }
 
-        hasWhiteBallTouchedOtherBalls = false;
+        ballsMoving = false;
         whiteBallPositionBeforeFoul = Ball.WHITE.getBody().getTransform().getTranslation();
     }
 
     private void declareFoul(String message) {
-        System.out.println("It's as a foul!");
         this.renderer.setFoulMessage("Foul: " + message);
 
         this.updatePoints(-1);
