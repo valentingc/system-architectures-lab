@@ -122,7 +122,7 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
         return new Point2D(deltaX, deltaY);
     }
 
-    /* ###### ###### */
+    /* ###### Game methods ###### */
 
     private void placeBalls(List<Ball> balls) {
         Collections.shuffle(balls);
@@ -198,6 +198,8 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
     public void onStartAllObjectsRest() {
 
     }
+
+    /* ###### Helper methods ###### */
 
     private void setWhiteBallToDefaultPosition() {
         Ball.WHITE.setPosition(Table.Constants.WIDTH * 0.25, 0);
