@@ -13,6 +13,7 @@ import org.dyn4j.geometry.Vector2;
 
 public class PhysicsEngine implements ContactListener, StepListener {
     private final World world;
+    private BallsCollisionListener ballsCollisionListener;
     private BallPocketedListener ballPocketedListener;
     private ObjectsRestListener objectsRestListener;
 
@@ -47,7 +48,21 @@ public class PhysicsEngine implements ContactListener, StepListener {
 
     @Override
     public boolean begin(ContactPoint point) {
-        // No implementation needed
+        if (point.isSensor()) {
+            // Return if ball pocketed
+            return false;
+        }
+
+        Body body1 = point.getBody1();
+        Body body2 = point.getBody2();
+
+        if (body1.getUserData() instanceof Ball && body2.getUserData() instanceof Ball) {
+            ballsCollisionListener.onBallsCollide(
+                    (Ball) body1.getUserData(),
+                    (Ball) body2.getUserData()
+            );
+        }
+
         return false;
     }
 
@@ -93,7 +108,7 @@ public class PhysicsEngine implements ContactListener, StepListener {
 
     @Override
     public void begin(Step step, World world) {
-        // TODO
+        // No implementation needed
     }
 
     @Override
@@ -108,7 +123,19 @@ public class PhysicsEngine implements ContactListener, StepListener {
 
     @Override
     public void end(Step step, World world) {
-        // TODO
+        int ballsMoving = 0;
+
+        for (Ball ball : Ball.values()) {
+            if (!ball.getBody().getLinearVelocity().isZero()) {
+                ballsMoving++;
+            }
+        }
+
+        if (0 == ballsMoving) {
+            objectsRestListener.onStartAllObjectsRest();
+        } else {
+            objectsRestListener.onEndAllObjectsRest();
+        }
     }
 
     /* ###### Helper methods ###### */
@@ -131,6 +158,10 @@ public class PhysicsEngine implements ContactListener, StepListener {
     }
 
     /* ###### Setter ###### */
+
+    public void setBallsCollisionListener(BallsCollisionListener ballsCollisionListener) {
+        this.ballsCollisionListener = ballsCollisionListener;
+    }
 
     public void setBallPocketedListener(BallPocketedListener ballPocketedListener) {
         this.ballPocketedListener = ballPocketedListener;

@@ -1,6 +1,7 @@
 package at.fhv.sysarch.lab2.game;
 
 import at.fhv.sysarch.lab2.physics.BallPocketedListener;
+import at.fhv.sysarch.lab2.physics.BallsCollisionListener;
 import at.fhv.sysarch.lab2.physics.ObjectsRestListener;
 import at.fhv.sysarch.lab2.physics.PhysicsEngine;
 import at.fhv.sysarch.lab2.rendering.Renderer;
@@ -8,11 +9,9 @@ import javafx.geometry.Point2D;
 import javafx.scene.input.MouseEvent;
 import org.dyn4j.geometry.Vector2;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
-public class Game implements BallPocketedListener, ObjectsRestListener {
+public class Game implements BallsCollisionListener, BallPocketedListener, ObjectsRestListener {
     public enum Player {
         PLAYER_ONE("Player 1"),
         PLAYER_TWO("Player 2");
@@ -36,15 +35,27 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
     private double mousePressedAtY;
 
     /* ## Game relevant ## */
-    private Player currentPlayer;
+    private Player currentPlayer = Player.PLAYER_ONE;
     private int scorePlayer1 = 0;
     private int scorePlayer2 = 0;
+    private int pocketedBallsInRound = 0;
+    private boolean roundRunning = false;
+    private boolean moveHandled = false;
+    private boolean ballsMoving = false;
+    private boolean foul = false;
+    private final Set<Ball> pocketedBalls = new HashSet<>();
+
+    /* ## White ball ## */
+    private boolean whiteBallPocketed = false;
+    private boolean whiteBallTouchedOtherBall = false;
+    private Vector2 whiteBallPositionPreFoul;
 
     public Game(Renderer renderer, PhysicsEngine engine) {
         this.renderer = renderer;
         this.engine = engine;
         this.initWorld();
 
+        engine.setBallsCollisionListener(this);
         engine.setBallPocketedListener(this);
         engine.setObjectsRestListener(this);
     }
@@ -52,6 +63,10 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
     /* ###### Mouse & Cue related methods ###### */
 
     public void onMousePressed(MouseEvent e) {
+        if (ballsMoving) {
+            return;
+        }
+
         double x = e.getX();
         double y = e.getY();
 
@@ -72,10 +87,12 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
         relativeMousePoint = relativeMousePoint.normalize();
 
         // TODO - Refactor with RayCasting
-        Ball.WHITE.getBody().applyImpulse(new Vector2(
-                relativeMousePoint.getX() * cueLength,
-                relativeMousePoint.getY() * cueLength
-        ));
+        if (!ballsMoving) {
+            Ball.WHITE.getBody().applyImpulse(new Vector2(
+                    relativeMousePoint.getX() * cueLength,
+                    relativeMousePoint.getY() * cueLength
+            ));
+        }
 
         // Init cue drawing
         renderer.setCueCoordinates(
@@ -86,6 +103,10 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
     }
 
     public void setOnMouseDragged(MouseEvent e) {
+        if (ballsMoving) {
+            return;
+        }
+
         double x = e.getX();
         double y = e.getY();
 
@@ -124,7 +145,7 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
 
     /* ###### Game methods ###### */
 
-    private void placeBalls(List<Ball> balls) {
+    private void placeBalls(List<Ball> balls, boolean ignoreTopSpot) {
         Collections.shuffle(balls);
 
         // positioning the billard balls IN WORLD COORDINATES: meters
@@ -151,6 +172,10 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
                 col++;
                 colSize--;
             }
+
+            if (ignoreTopSpot && 1 == colSize) {
+                return;
+            }
         }
     }
 
@@ -164,7 +189,7 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
             balls.add(b);
         }
 
-        this.placeBalls(balls);
+        this.placeBalls(balls, false);
 
         setWhiteBallToDefaultPosition();
         engine.addBodyFromGame(Ball.WHITE.getBody());
@@ -176,13 +201,31 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
     }
 
     @Override
+    public void onBallsCollide(Ball b1, Ball b2) {
+        if (whiteBallTouchedOtherBall || moveHandled) {
+            return;
+        }
+
+        if ((b1.isWhite() && !b2.isWhite() || (!b1.isWhite() && b2.isWhite()))) {
+            whiteBallTouchedOtherBall = true;
+        }
+    }
+
+    @Override
     public boolean onBallPocketed(Ball b) {
         // Prevent ball from spinning before removing
         b.getBody().setLinearVelocity(0, 0);
 
         if (b.isWhite()) {
+            whiteBallPocketed = true;
+
+            declareFoul("White ball has been pocketed");
             setWhiteBallToDefaultPosition();
         } else {
+            pocketedBallsInRound++;
+            updatePlayerScore(1);
+            pocketedBalls.add(b);
+
             engine.removeBodyFromGame(b.getBody());
             renderer.removeBall(b);
         }
@@ -193,12 +236,39 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
 
     @Override
     public void onEndAllObjectsRest() {
-
+        roundRunning = true;
+        ballsMoving = true;
+        moveHandled = false;
+        whiteBallPocketed = false;
+        clearMessages();
     }
 
     @Override
     public void onStartAllObjectsRest() {
+        if (!roundRunning) {
+            return;
+        }
 
+        if (!whiteBallPocketed && !whiteBallTouchedOtherBall && 0 == pocketedBallsInRound) {
+            this.declareFoul("White ball has not touched other balls");
+            setWhiteBallToPreFoulPosition();
+        } else if (!whiteBallPocketed && whiteBallTouchedOtherBall && 0 == pocketedBallsInRound) {
+            switchPlayers();
+        }
+
+        if (foul) {
+            switchPlayers();
+        }
+
+        resetGameIfOnlyOneLeft();
+
+        roundRunning = false;
+        ballsMoving = false;
+        moveHandled = true;
+        foul = false;
+        whiteBallTouchedOtherBall = false;
+        pocketedBallsInRound = 0;
+        whiteBallPositionPreFoul = Ball.WHITE.getBody().getTransform().getTranslation();
     }
 
     /* ###### Helper methods ###### */
@@ -206,6 +276,13 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
     private void setWhiteBallToDefaultPosition() {
         Ball.WHITE.setPosition(Table.Constants.WIDTH * 0.25, 0);
         Ball.WHITE.getBody().setLinearVelocity(0, 0);
+        whiteBallPositionPreFoul = Ball.WHITE.getBody().getTransform().getTranslation();
+    }
+
+    private void setWhiteBallToPreFoulPosition() {
+        Ball.WHITE.setPosition(whiteBallPositionPreFoul.x, whiteBallPositionPreFoul.y);
+        Ball.WHITE.getBody().setLinearVelocity(0, 0);
+        whiteBallPositionPreFoul = Ball.WHITE.getBody().getTransform().getTranslation();
     }
 
     private void clearMessages() {
@@ -233,10 +310,25 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
     }
 
     private void declareFoul(String message) {
-        renderer.setFoulMessage("Foul: " + message);
+        foul = true;
 
+        renderer.setFoulMessage("Foul: " + message);
         updatePlayerScore(-1);
-        setWhiteBallToDefaultPosition();
-        switchPlayers();
+    }
+
+    private void resetGameIfOnlyOneLeft() {
+        if (pocketedBalls.size() >= 14) {
+            List<Ball> balls = new ArrayList<>();
+
+            for (Ball b : Ball.values()) {
+                if (b == Ball.WHITE || !pocketedBalls.contains(b))
+                    continue;
+
+                balls.add(b);
+            }
+
+            setWhiteBallToDefaultPosition();
+            placeBalls(balls, true);
+        }
     }
 }
