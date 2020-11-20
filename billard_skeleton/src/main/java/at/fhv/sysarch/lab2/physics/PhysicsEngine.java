@@ -93,7 +93,7 @@ public class PhysicsEngine implements ContactListener, StepListener {
 
     @Override
     public void begin(Step step, World world) {
-        objectsRestListener.onStartAllObjectsRest();
+        // TODO
     }
 
     @Override
@@ -108,12 +108,11 @@ public class PhysicsEngine implements ContactListener, StepListener {
 
     @Override
     public void end(Step step, World world) {
-        objectsRestListener.onEndAllObjectsRest();
+        // TODO
     }
 
     /* ###### Helper methods ###### */
 
-    // TODO - Pocket coordinates (0, 0) after first ever ball pocketed
     private boolean isBallPocketed(Body ball, Body pocket, PersistedContactPoint point) {
         // World coordinates of ball
         Vector2 ballPosition = ball.getTransform().getTranslation();
@@ -128,7 +127,7 @@ public class PhysicsEngine implements ContactListener, StepListener {
         Vector2 difference = ballPosition.difference(pocketInWorld);
         double magnitudeDifference = difference.getMagnitude();
 
-        return magnitudeDifference <= 0.035;
+        return magnitudeDifference <= Ball.Constants.RADIUS;
     }
 
     /* ###### Setter ###### */

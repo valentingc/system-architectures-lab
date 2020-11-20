@@ -167,6 +167,8 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
         this.placeBalls(balls);
 
         setWhiteBallToDefaultPosition();
+        engine.addBodyFromGame(Ball.WHITE.getBody());
+        renderer.addBall(Ball.WHITE);
 
         Table table = new Table();
         engine.addBodyFromGame(table.getBody());
@@ -178,11 +180,11 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
         // Prevent ball from spinning before removing
         b.getBody().setLinearVelocity(0, 0);
 
-        engine.removeBodyFromGame(b.getBody());
-        renderer.removeBall(b);
-
         if (b.isWhite()) {
             setWhiteBallToDefaultPosition();
+        } else {
+            engine.removeBodyFromGame(b.getBody());
+            renderer.removeBall(b);
         }
 
         // Return value not needed
@@ -203,10 +205,7 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
 
     private void setWhiteBallToDefaultPosition() {
         Ball.WHITE.setPosition(Table.Constants.WIDTH * 0.25, 0);
-        if (!engine.isGameBodyKnown(Ball.WHITE.getBody())) {
-            engine.addBodyFromGame(Ball.WHITE.getBody());
-            renderer.addBall(Ball.WHITE);
-        }
+        Ball.WHITE.getBody().setLinearVelocity(0, 0);
     }
 
     private void clearMessages() {
