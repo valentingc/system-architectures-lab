@@ -2,6 +2,8 @@ package at.fhv.sysarch.lab2.physics;
 
 import at.fhv.sysarch.lab2.game.Ball;
 import org.dyn4j.dynamics.Body;
+import org.dyn4j.dynamics.Step;
+import org.dyn4j.dynamics.StepListener;
 import org.dyn4j.dynamics.World;
 import org.dyn4j.dynamics.contact.ContactListener;
 import org.dyn4j.dynamics.contact.ContactPoint;
@@ -9,7 +11,7 @@ import org.dyn4j.dynamics.contact.PersistedContactPoint;
 import org.dyn4j.dynamics.contact.SolvedContactPoint;
 import org.dyn4j.geometry.Vector2;
 
-public class PhysicsEngine implements ContactListener {
+public class PhysicsEngine implements ContactListener, StepListener {
     private final World world;
     private BallPocketedListener ballPocketedListener;
     private ObjectsRestListener objectsRestListener;
@@ -36,27 +38,22 @@ public class PhysicsEngine implements ContactListener {
         world.update(deltaTime);
     }
 
-    public void setBallPocketedListener(BallPocketedListener ballPocketedListener) {
-        this.ballPocketedListener = ballPocketedListener;
-    }
-
-    public void setObjectsRestListener(ObjectsRestListener objectsRestListener) {
-        this.objectsRestListener = objectsRestListener;
-    }
+    /* ###### ContactListener ###### */
 
     @Override
     public void sensed(ContactPoint point) {
-
+        // No implementation needed
     }
 
     @Override
     public boolean begin(ContactPoint point) {
+        // No implementation needed
         return false;
     }
 
     @Override
     public void end(ContactPoint point) {
-
+        // No implementation needed
     }
 
     @Override
@@ -83,13 +80,38 @@ public class PhysicsEngine implements ContactListener {
 
     @Override
     public boolean preSolve(ContactPoint point) {
+        // No implementation needed
         return true;
     }
 
     @Override
     public void postSolve(SolvedContactPoint point) {
-
+        // No implementation needed
     }
+
+    /* ###### StepListener ###### */
+
+    @Override
+    public void begin(Step step, World world) {
+        objectsRestListener.onStartAllObjectsRest();
+    }
+
+    @Override
+    public void updatePerformed(Step step, World world) {
+        // No implementation needed
+    }
+
+    @Override
+    public void postSolve(Step step, World world) {
+        // No implementation needed
+    }
+
+    @Override
+    public void end(Step step, World world) {
+        objectsRestListener.onEndAllObjectsRest();
+    }
+
+    /* ###### Helper methods ###### */
 
     // TODO - Pocket coordinates (0, 0) after first ever ball pocketed
     private boolean isBallPocketed(Body ball, Body pocket, PersistedContactPoint point) {
@@ -107,5 +129,15 @@ public class PhysicsEngine implements ContactListener {
         double magnitudeDifference = difference.getMagnitude();
 
         return magnitudeDifference <= 0.035;
+    }
+
+    /* ###### Setter ###### */
+
+    public void setBallPocketedListener(BallPocketedListener ballPocketedListener) {
+        this.ballPocketedListener = ballPocketedListener;
+    }
+
+    public void setObjectsRestListener(ObjectsRestListener objectsRestListener) {
+        this.objectsRestListener = objectsRestListener;
     }
 }
