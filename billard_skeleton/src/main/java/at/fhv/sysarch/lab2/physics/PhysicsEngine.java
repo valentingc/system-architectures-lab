@@ -28,6 +28,10 @@ public class PhysicsEngine implements ContactListener {
         world.removeBody(body);
     }
 
+    public boolean isGameBodyKnown(Body body) {
+        return world.getBodies().contains(body);
+    }
+
     public void update(double deltaTime) {
         world.update(deltaTime);
     }
@@ -87,6 +91,7 @@ public class PhysicsEngine implements ContactListener {
 
     }
 
+    // TODO - Pocket coordinates (0, 0) after first ever ball pocketed
     private boolean isBallPocketed(Body ball, Body pocket, PersistedContactPoint point) {
         // World coordinates of ball
         Vector2 ballPosition = ball.getTransform().getTranslation();
@@ -101,7 +106,6 @@ public class PhysicsEngine implements ContactListener {
         Vector2 difference = ballPosition.difference(pocketInWorld);
         double magnitudeDifference = difference.getMagnitude();
 
-        // TODO - Difference sometimes >= 0.5 but ball is in pocket
         return magnitudeDifference <= 0.035;
     }
 }

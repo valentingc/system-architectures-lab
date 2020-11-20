@@ -6,7 +6,6 @@ import at.fhv.sysarch.lab2.physics.PhysicsEngine;
 import at.fhv.sysarch.lab2.rendering.Renderer;
 import javafx.geometry.Point2D;
 import javafx.scene.input.MouseEvent;
-import org.dyn4j.dynamics.Body;
 import org.dyn4j.geometry.Vector2;
 
 import java.util.ArrayList;
@@ -202,8 +201,41 @@ public class Game implements BallPocketedListener, ObjectsRestListener {
 
     private void setWhiteBallToDefaultPosition() {
         Ball.WHITE.setPosition(Table.Constants.WIDTH * 0.25, 0);
-        Ball.WHITE.getBody().setLinearVelocity(0, 0);
-        engine.addBodyFromGame(Ball.WHITE.getBody());
-        renderer.addBall(Ball.WHITE);
+        if (!engine.isGameBodyKnown(Ball.WHITE.getBody())) {
+            engine.addBodyFromGame(Ball.WHITE.getBody());
+            renderer.addBall(Ball.WHITE);
+        }
+    }
+
+    private void clearMessages() {
+        renderer.setFoulMessage("");
+        renderer.setActionMessage("");
+    }
+
+    private void switchPlayers() {
+        if (currentPlayer.equals(Player.PLAYER_ONE)) {
+            currentPlayer = Player.PLAYER_TWO;
+        } else {
+            currentPlayer = Player.PLAYER_ONE;
+        }
+        renderer.setActionMessage("Switching players, next player: " + currentPlayer.getName());
+    }
+
+    private void updatePlayerScore(int scoredPoint) {
+        if (currentPlayer.equals(Player.PLAYER_ONE)) {
+            scorePlayer1 += scoredPoint;
+            renderer.setPlayer1Score(scorePlayer1);
+        } else {
+            scorePlayer2 += scoredPoint;
+            renderer.setPlayer2Score(scorePlayer2);
+        }
+    }
+
+    private void declareFoul(String message) {
+        renderer.setFoulMessage("Foul: " + message);
+
+        updatePlayerScore(-1);
+        setWhiteBallToDefaultPosition();
+        switchPlayers();
     }
 }
