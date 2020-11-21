@@ -258,6 +258,8 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
 
         if (foul) {
             switchPlayers();
+        } else {
+            whiteBallPositionPreFoul = Ball.WHITE.getBody().getTransform().getTranslation();
         }
 
         resetGameIfOnlyOneLeft();
@@ -268,7 +270,6 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
         foul = false;
         whiteBallTouchedOtherBall = false;
         pocketedBallsInRound = 0;
-        whiteBallPositionPreFoul = Ball.WHITE.getBody().getTransform().getTranslation();
     }
 
     /* ###### Helper methods ###### */
