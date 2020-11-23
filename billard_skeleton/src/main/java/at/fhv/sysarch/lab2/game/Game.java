@@ -98,14 +98,14 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
         Ray ray = new Ray(start, direction); // erster vektor: start, zweiter: richtung
         List<RaycastResult> results = new ArrayList<>();
 
-        this.engine.getWorld().raycast(ray, 0, false, false, results);
+        this.engine.getWorld().raycast(ray, Ball.Constants.RADIUS * 2, false, false, results);
         if (results.isEmpty()) {
             // muss spieler wechseln
         } else {
             // wenn es eine kugel ist: applyForce
             Body body = results.get(0).getBody();
             if (body.getUserData() instanceof Ball) {
-                body.applyImpulse(direction.multiply(10));
+                body.applyImpulse(direction.multiply(7));
             }
         }
     }
