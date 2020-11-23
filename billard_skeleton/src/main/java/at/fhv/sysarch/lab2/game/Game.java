@@ -40,6 +40,7 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
     /* ## White ball ## */
     private boolean whiteBallPocketed = false;
     private boolean whiteBallTouchedOtherBall = false;
+    private boolean didNotStrokeWhiteBall = true;
     private Vector2 whiteBallPositionPreFoul;
     public Game(Renderer renderer, PhysicsEngine engine) {
         this.renderer = renderer;
@@ -100,12 +101,17 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
 
         this.engine.getWorld().raycast(ray, Ball.Constants.RADIUS * 2, false, false, results);
         if (results.isEmpty()) {
-            // muss spieler wechseln
+            this.switchPlayers();
         } else {
             // wenn es eine kugel ist: applyForce
             Body body = results.get(0).getBody();
             if (body.getUserData() instanceof Ball) {
+                Ball b = (Ball) body.getUserData();
                 body.applyImpulse(direction.multiply(7));
+                if (!b.isWhite()) {
+                    this.foul = true;
+                    this.didNotStrokeWhiteBall = true;
+                }
             }
         }
     }
@@ -246,12 +252,14 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
         }
 
         if (!whiteBallPocketed && !whiteBallTouchedOtherBall && 0 == pocketedBallsInRound) {
-            this.declareFoul("White ball has not touched other balls");
+            declareFoul("White ball has not touched other balls");
             setWhiteBallToPreFoulPosition();
         } else if (!whiteBallPocketed && whiteBallTouchedOtherBall && 0 == pocketedBallsInRound) {
             switchPlayers();
+        } else if (foul && didNotStrokeWhiteBall) {
+            declareFoul("Another ball than white was stroke");
+            setWhiteBallToPreFoulPosition();
         }
-
         if (foul) {
             switchPlayers();
         } else {
@@ -265,6 +273,7 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
         moveHandled = true;
         foul = false;
         whiteBallTouchedOtherBall = false;
+        didNotStrokeWhiteBall = false;
         pocketedBallsInRound = 0;
     }
 
