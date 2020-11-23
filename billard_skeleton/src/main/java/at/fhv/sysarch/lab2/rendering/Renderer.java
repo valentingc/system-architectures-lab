@@ -329,12 +329,15 @@ public class Renderer extends AnimationTimer {
 
     private final PhysicsEngine engine;
     private CueDrawingState drawingState = CueDrawingState.NONE;
-    private double cueX;
-    private double cueY;
+    private double cueStartX;
+    private double cueStartY;
+    private double cueEndX;
+    private double cueEndY;
 
     private void drawCue() {
+        gc.setTransform(this.jfxCoords);
         if (drawingState.equals(CueDrawingState.PRESSED) || drawingState.equals(CueDrawingState.DRAGGED)) {
-            gc.strokeLine(0, 0, cueX * 20, cueY * 20);
+            gc.strokeLine(cueStartX, cueStartY, cueEndX, cueEndY);
         }
     }
 
@@ -342,8 +345,13 @@ public class Renderer extends AnimationTimer {
         this.drawingState = drawingState;
     }
 
-    public void setCueCoordinates(double x, double y) {
-        cueX = x * -1;
-        cueY = y * -1;
+    public void setCueEndCoordinates(double x, double y) {
+        cueEndX = x;
+        cueEndY = y;
+    }
+
+    public void setCueStartCoordinates(double x, double y) {
+        cueStartX = x;
+        cueStartY = y;
     }
 }

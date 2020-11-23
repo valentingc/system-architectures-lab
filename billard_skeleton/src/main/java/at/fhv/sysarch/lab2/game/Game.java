@@ -7,7 +7,6 @@ import at.fhv.sysarch.lab2.physics.PhysicsEngine;
 import at.fhv.sysarch.lab2.rendering.Renderer;
 import javafx.geometry.Point2D;
 import javafx.scene.input.MouseEvent;
-import org.dyn4j.collision.narrowphase.Raycast;
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.RaycastResult;
 import org.dyn4j.geometry.Ray;
@@ -35,8 +34,10 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
     private final PhysicsEngine engine;
 
     /* ## Mouse & Cue ## */
-    private double mousePressedAtX;
-    private double mousePressedAtY;
+    private double mousePressedAtPhysicsX;
+    private double mousePressedAtPhysicsY;
+    private double mouseReleasedAtPhysicsX;
+    private double mouseReleasedAtY;
 
     /* ## Game relevant ## */
     private Player currentPlayer = Player.PLAYER_ONE;
@@ -79,52 +80,48 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
         // 1. erster punkt
         // wie ermitteln wie die richtung des rays?
 
-        mousePressedAtX = x;
-        mousePressedAtY = y;
+        mousePressedAtPhysicsX = pX;
+        mousePressedAtPhysicsY = pY;
+        this.renderer.setCueStartCoordinates(x, y);
         this.renderer.setDrawingState(Renderer.CueDrawingState.PRESSED);
     }
 
     public void onMouseReleased(MouseEvent e) {
+        if (ballsMoving) {
+            return;
+        }
         double x = e.getX();
         double y = e.getY();
+        double pX = this.renderer.screenToPhysicsX(x);
+        double pY = this.renderer.screenToPhysicsY(y);
 
-        Point2D relativeMousePoint = calculateRelativePointOfMouse(x, y);
-        double cueLength = calculateCueLength(relativeMousePoint);
-        relativeMousePoint = relativeMousePoint.normalize();
+        this.renderer.setCueEndCoordinates(x,y);
+
+        double cueLength = calculateCueLength(new Point2D(pX, pY));
 
         // TODO - Refactor with RayCasting
-        // List<RaycastResult> list = new LinkedList<>();
-        // boolean res = this.engine.getWorld().raycast(
-        //     new Vector2(this.mousePressedAtX, this.mousePressedAtY),
-        //     new Vector2(x, y),
-        //     true,
-        //     true,
-        //     list);
-        // for (RaycastResult r : list) {
-        //     System.out.println(r);
-        // }
-        if (!ballsMoving) {
-            Ball.WHITE.getBody().applyImpulse(new Vector2(
-                    relativeMousePoint.getX() * cueLength,
-                    relativeMousePoint.getY() * cueLength
-            ));
-        }
-        // 3. ENDPUNKT
-        // Init cue drawing
-        renderer.setCueCoordinates(
-                relativeMousePoint.getX() * cueLength,
-                relativeMousePoint.getY() * cueLength
-        );
-        renderer.setDrawingState(Renderer.CueDrawingState.RELEASED);
+        this.renderer.setDrawingState(Renderer.CueDrawingState.RELEASED);
+
+        Vector2 start = new Vector2(this.mousePressedAtPhysicsX, this.mousePressedAtPhysicsY);
+        Vector2 end = new Vector2(pX, pY);
+        Vector2 diff = end.difference(start).multiply(-1); // we draw in the opposite direction
+
 
         // start und end punkt: differenz bilden
         // startpunkt + richtung -> ray erzeugen und unten übergeben
-//        Ray ray = new Ray(new Vector2(0,0)); // erster vektor: start, zweiter: richtung
-//        List<RaycastResult> results = new ArrayList<>();
-//
-//        this.engine.getWorld().raycast(ray, 0, false, false, results);
-//        Body body = results.get(0).getBody();
-        // wenn es eine kugel ist: applyForce
+        Ray ray = new Ray(start, diff); // erster vektor: start, zweiter: richtung
+        List<RaycastResult> results = new ArrayList<>();
+
+        this.engine.getWorld().raycast(ray, 0, false, false, results);
+        if (results.isEmpty()) {
+            // muss spieler wechseln
+        } else {
+            // wenn es eine kugel ist: applyForce
+            Body body = results.get(0).getBody();
+            if (body.getUserData() instanceof Ball) {
+                body.applyImpulse(diff.multiply(cueLength));
+            }
+        }
     }
 
     public void setOnMouseDragged(MouseEvent e) {
@@ -135,26 +132,14 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
         double x = e.getX();
         double y = e.getY();
 
-        double pX = renderer.screenToPhysicsX(x);
-        double pY = renderer.screenToPhysicsY(y);
-
-        // 2. HIER DIE RICHTUNG FINDEN
-
-        Point2D relativeMousePoint = calculateRelativePointOfMouse(x, y);
-        double cueLength = calculateCueLength(relativeMousePoint);
-        relativeMousePoint = relativeMousePoint.normalize();
-
         // Init cue drawing
-        renderer.setCueCoordinates(
-                relativeMousePoint.getX() * cueLength,
-                relativeMousePoint.getY() * cueLength
-        );
+        renderer.setCueEndCoordinates(x,y);
         renderer.setDrawingState(Renderer.CueDrawingState.DRAGGED);
     }
 
     // TODO - Explanation for calculations
     private double calculateCueLength(Point2D point) {
-        double length = (point.magnitude() / 10) / 4;
+        double length = point.magnitude(); // / 10) / 4
         // Artificially limit length
         if (length > 10) {
             length = 10;
@@ -164,8 +149,8 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
     }
 
     private Point2D calculateRelativePointOfMouse(double x, double y) {
-        double deltaX = mousePressedAtX - x;
-        double deltaY = mousePressedAtY - y;
+        double deltaX = mousePressedAtPhysicsX - x;
+        double deltaY = mousePressedAtPhysicsY - y;
 
         return new Point2D(deltaX, deltaY);
     }
