@@ -105,8 +105,7 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
             // wenn es eine kugel ist: applyForce
             Body body = results.get(0).getBody();
             if (body.getUserData() instanceof Ball) {
-                body.applyImpulse(direction); //new Vector2(cueLength.getX() * -1, cueLength.getY() *
-                // -1)
+                body.applyImpulse(direction.multiply(10));
             }
         }
     }
@@ -122,7 +121,7 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
         Point2D cueLength = calculateCueDistance(mousePressedScr,
             new Point2D(x,y));
 
-        Point2D newEnd = mousePressedScr.add(cueLength);
+        Point2D newEnd = mousePressedScr.add(cueLength.multiply(10));
         renderer.setCueEndCoordinates(newEnd.getX(), newEnd.getY());
         renderer.setDrawingState(Renderer.CueDrawingState.DRAGGED);
     }
@@ -137,13 +136,6 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
 
         cueDistance = cueDistance.normalize();
         return new Point2D(cueDistance.getX() * cueLength, cueDistance.getY() * cueLength);
-    }
-
-    private Point2D calculateRelativePointOfMouse(double x, double y) {
-        double deltaX = mousePressedScr.getX() - x;
-        double deltaY = mousePressedScr.getY() - y;
-
-        return new Point2D(deltaX, deltaY);
     }
 
     private void placeBalls(List<Ball> balls, boolean ignoreTopSpot) {
