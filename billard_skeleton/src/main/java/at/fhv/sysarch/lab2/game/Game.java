@@ -5,6 +5,12 @@ import at.fhv.sysarch.lab2.physics.BallsCollisionListener;
 import at.fhv.sysarch.lab2.physics.ObjectsRestListener;
 import at.fhv.sysarch.lab2.physics.PhysicsEngine;
 import at.fhv.sysarch.lab2.rendering.Renderer;
+import java.awt.Point;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import javafx.geometry.Point2D;
 import javafx.scene.input.MouseEvent;
 import org.dyn4j.dynamics.Body;
@@ -12,30 +18,13 @@ import org.dyn4j.dynamics.RaycastResult;
 import org.dyn4j.geometry.Ray;
 import org.dyn4j.geometry.Vector2;
 
-import java.util.*;
-
 public class Game implements BallsCollisionListener, BallPocketedListener, ObjectsRestListener {
-    public enum Player {
-        PLAYER_ONE("Player 1"),
-        PLAYER_TWO("Player 2");
-
-        private final String name;
-
-        Player(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
-    }
-
     private final Renderer renderer;
     private final PhysicsEngine engine;
-
+    private final Set<Ball> pocketedBalls = new HashSet<>();
     /* ## Mouse & Cue ## */
-    private double mousePressedAtPhysicsX;
-    private double mousePressedAtPhysicsY;
+    private Point2D mousePressedScr;
+    private Point2D mousePressedPh;
     private double mouseReleasedAtPhysicsX;
     private double mouseReleasedAtY;
 
@@ -48,13 +37,10 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
     private boolean moveHandled = false;
     private boolean ballsMoving = false;
     private boolean foul = false;
-    private final Set<Ball> pocketedBalls = new HashSet<>();
-
     /* ## White ball ## */
     private boolean whiteBallPocketed = false;
     private boolean whiteBallTouchedOtherBall = false;
     private Vector2 whiteBallPositionPreFoul;
-
     public Game(Renderer renderer, PhysicsEngine engine) {
         this.renderer = renderer;
         this.engine = engine;
@@ -64,8 +50,6 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
         engine.setBallPocketedListener(this);
         engine.setObjectsRestListener(this);
     }
-
-    /* ###### Mouse & Cue related methods ###### */
 
     public void onMousePressed(MouseEvent e) {
         if (ballsMoving) {
@@ -80,11 +64,14 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
         // 1. erster punkt
         // wie ermitteln wie die richtung des rays?
 
-        mousePressedAtPhysicsX = pX;
-        mousePressedAtPhysicsY = pY;
-        this.renderer.setCueStartCoordinates(x, y);
+        mousePressedScr = new Point2D(x, y);
+        mousePressedPh = new Point2D(pX, pY);
+        this.renderer.setCueStartCoordinates(mousePressedScr.getX(), mousePressedScr.getY());
+        this.renderer.setCueEndCoordinates(mousePressedScr.getX(), mousePressedScr.getY());
         this.renderer.setDrawingState(Renderer.CueDrawingState.PRESSED);
     }
+
+    /* ###### Mouse & Cue related methods ###### */
 
     public void onMouseReleased(MouseEvent e) {
         if (ballsMoving) {
@@ -95,21 +82,20 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
         double pX = this.renderer.screenToPhysicsX(x);
         double pY = this.renderer.screenToPhysicsY(y);
 
-        this.renderer.setCueEndCoordinates(x,y);
+        // Drawing
+        Point2D cueLength = calculateCueDistance(mousePressedScr,
+            new Point2D(x,y));
 
-        double cueLength = calculateCueLength(new Point2D(pX, pY));
-
-        // TODO - Refactor with RayCasting
+        // RayCasting
         this.renderer.setDrawingState(Renderer.CueDrawingState.RELEASED);
 
-        Vector2 start = new Vector2(this.mousePressedAtPhysicsX, this.mousePressedAtPhysicsY);
+        Vector2 start = new Vector2(this.mousePressedPh.getX(), this.mousePressedPh.getY());
         Vector2 end = new Vector2(pX, pY);
-        Vector2 diff = end.difference(start).multiply(-1); // we draw in the opposite direction
-
+        Vector2 direction = end.difference(start).multiply(-1); // we draw in the opposite direction
 
         // start und end punkt: differenz bilden
         // startpunkt + richtung -> ray erzeugen und unten übergeben
-        Ray ray = new Ray(start, diff); // erster vektor: start, zweiter: richtung
+        Ray ray = new Ray(start, direction); // erster vektor: start, zweiter: richtung
         List<RaycastResult> results = new ArrayList<>();
 
         this.engine.getWorld().raycast(ray, 0, false, false, results);
@@ -119,7 +105,8 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
             // wenn es eine kugel ist: applyForce
             Body body = results.get(0).getBody();
             if (body.getUserData() instanceof Ball) {
-                body.applyImpulse(diff.multiply(cueLength));
+                body.applyImpulse(direction); //new Vector2(cueLength.getX() * -1, cueLength.getY() *
+                // -1)
             }
         }
     }
@@ -131,31 +118,33 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
 
         double x = e.getX();
         double y = e.getY();
-
         // Init cue drawing
-        renderer.setCueEndCoordinates(x,y);
+        Point2D cueLength = calculateCueDistance(mousePressedScr,
+            new Point2D(x,y));
+
+        Point2D newEnd = mousePressedScr.add(cueLength);
+        renderer.setCueEndCoordinates(newEnd.getX(), newEnd.getY());
         renderer.setDrawingState(Renderer.CueDrawingState.DRAGGED);
     }
 
-    // TODO - Explanation for calculations
-    private double calculateCueLength(Point2D point) {
-        double length = point.magnitude(); // / 10) / 4
-        // Artificially limit length
-        if (length > 10) {
-            length = 10;
+    private Point2D calculateCueDistance(Point2D start, Point2D end) {
+        Point2D cueDistance = end.subtract(start);
+
+        double cueLength = cueDistance.magnitude() / 10 / 2;
+        if (cueLength > 10) {
+            cueLength = 10;
         }
 
-        return length;
+        cueDistance = cueDistance.normalize();
+        return new Point2D(cueDistance.getX() * cueLength, cueDistance.getY() * cueLength);
     }
 
     private Point2D calculateRelativePointOfMouse(double x, double y) {
-        double deltaX = mousePressedAtPhysicsX - x;
-        double deltaY = mousePressedAtPhysicsY - y;
+        double deltaX = mousePressedScr.getX() - x;
+        double deltaY = mousePressedScr.getY() - y;
 
         return new Point2D(deltaX, deltaY);
     }
-
-    /* ###### Game methods ###### */
 
     private void placeBalls(List<Ball> balls, boolean ignoreTopSpot) {
         Collections.shuffle(balls);
@@ -191,12 +180,15 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
         }
     }
 
+    /* ###### Game methods ###### */
+
     private void initWorld() {
         List<Ball> balls = new ArrayList<>();
 
         for (Ball b : Ball.values()) {
-            if (b == Ball.WHITE)
+            if (b == Ball.WHITE) {
                 continue;
+            }
 
             balls.add(b);
         }
@@ -284,13 +276,13 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
         pocketedBallsInRound = 0;
     }
 
-    /* ###### Helper methods ###### */
-
     private void setWhiteBallToDefaultPosition() {
         Ball.WHITE.setPosition(Table.Constants.WIDTH * 0.25, 0);
         Ball.WHITE.getBody().setLinearVelocity(0, 0);
         whiteBallPositionPreFoul = Ball.WHITE.getBody().getTransform().getTranslation();
     }
+
+    /* ###### Helper methods ###### */
 
     private void setWhiteBallToPreFoulPosition() {
         Ball.WHITE.setPosition(whiteBallPositionPreFoul.x, whiteBallPositionPreFoul.y);
@@ -334,8 +326,9 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
             List<Ball> balls = new ArrayList<>();
 
             for (Ball b : Ball.values()) {
-                if (b == Ball.WHITE || !pocketedBalls.contains(b))
+                if (b == Ball.WHITE || !pocketedBalls.contains(b)) {
                     continue;
+                }
 
                 balls.add(b);
             }
@@ -343,9 +336,20 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
             setWhiteBallToDefaultPosition();
             placeBalls(balls, true);
         }
-        //renderer.setCueCoordinates(
-        //    Ball.WHITE.getBody().getTransform().getTranslation().x,
-        //    Ball.WHITE.getBody().getTransform().getTranslation().y
-        //);
+    }
+
+    public enum Player {
+        PLAYER_ONE("Player 1"),
+        PLAYER_TWO("Player 2");
+
+        private final String name;
+
+        Player(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
     }
 }

@@ -5,6 +5,7 @@ import at.fhv.sysarch.lab2.game.Table;
 import at.fhv.sysarch.lab2.game.Table.TablePart;
 import at.fhv.sysarch.lab2.physics.PhysicsEngine;
 import javafx.animation.AnimationTimer;
+import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.ArcType;
@@ -336,6 +337,7 @@ public class Renderer extends AnimationTimer {
 
     private void drawCue() {
         gc.setTransform(this.jfxCoords);
+
         if (drawingState.equals(CueDrawingState.PRESSED) || drawingState.equals(CueDrawingState.DRAGGED)) {
             gc.strokeLine(cueStartX, cueStartY, cueEndX, cueEndY);
         }
@@ -351,6 +353,7 @@ public class Renderer extends AnimationTimer {
     }
 
     public void setCueStartCoordinates(double x, double y) {
+        System.out.println("Start? " + x + ", "+y);
         cueStartX = x;
         cueStartY = y;
     }
