@@ -200,6 +200,8 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
         Table table = new Table();
         engine.addBodyFromGame(table.getBody());
         renderer.setTable(table);
+
+        renderer.setStrikeMessage("Next strike: " + currentPlayer.getName());
     }
 
     @Override
@@ -302,6 +304,7 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
         } else {
             currentPlayer = Player.PLAYER_ONE;
         }
+        renderer.setStrikeMessage("Next strike: " + currentPlayer.getName());
         renderer.setActionMessage("Switching players, next player: " + currentPlayer.getName());
     }
 
