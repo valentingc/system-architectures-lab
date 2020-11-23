@@ -40,7 +40,7 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
     /* ## White ball ## */
     private boolean whiteBallPocketed = false;
     private boolean whiteBallTouchedOtherBall = false;
-    private boolean didNotStrokeWhiteBall = true;
+    private boolean didNotStrokeWhiteBall = false;
     private Vector2 whiteBallPositionPreFoul;
     public Game(Renderer renderer, PhysicsEngine engine) {
         this.renderer = renderer;
