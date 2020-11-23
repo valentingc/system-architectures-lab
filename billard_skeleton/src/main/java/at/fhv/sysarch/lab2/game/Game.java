@@ -7,6 +7,10 @@ import at.fhv.sysarch.lab2.physics.PhysicsEngine;
 import at.fhv.sysarch.lab2.rendering.Renderer;
 import javafx.geometry.Point2D;
 import javafx.scene.input.MouseEvent;
+import org.dyn4j.collision.narrowphase.Raycast;
+import org.dyn4j.dynamics.Body;
+import org.dyn4j.dynamics.RaycastResult;
+import org.dyn4j.geometry.Ray;
 import org.dyn4j.geometry.Vector2;
 
 import java.util.*;
@@ -67,11 +71,13 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
             return;
         }
 
-        double x = e.getX();
+        double x = e.getX(); // screen koordinaten?
         double y = e.getY();
 
         double pX = this.renderer.screenToPhysicsX(x);
         double pY = this.renderer.screenToPhysicsY(y);
+        // 1. erster punkt
+        // wie ermitteln wie die richtung des rays?
 
         mousePressedAtX = x;
         mousePressedAtY = y;
@@ -87,19 +93,38 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
         relativeMousePoint = relativeMousePoint.normalize();
 
         // TODO - Refactor with RayCasting
+        // List<RaycastResult> list = new LinkedList<>();
+        // boolean res = this.engine.getWorld().raycast(
+        //     new Vector2(this.mousePressedAtX, this.mousePressedAtY),
+        //     new Vector2(x, y),
+        //     true,
+        //     true,
+        //     list);
+        // for (RaycastResult r : list) {
+        //     System.out.println(r);
+        // }
         if (!ballsMoving) {
             Ball.WHITE.getBody().applyImpulse(new Vector2(
                     relativeMousePoint.getX() * cueLength,
                     relativeMousePoint.getY() * cueLength
             ));
         }
-
+        // 3. ENDPUNKT
         // Init cue drawing
         renderer.setCueCoordinates(
                 relativeMousePoint.getX() * cueLength,
                 relativeMousePoint.getY() * cueLength
         );
         renderer.setDrawingState(Renderer.CueDrawingState.RELEASED);
+
+        // start und end punkt: differenz bilden
+        // startpunkt + richtung -> ray erzeugen und unten übergeben
+//        Ray ray = new Ray(new Vector2(0,0)); // erster vektor: start, zweiter: richtung
+//        List<RaycastResult> results = new ArrayList<>();
+//
+//        this.engine.getWorld().raycast(ray, 0, false, false, results);
+//        Body body = results.get(0).getBody();
+        // wenn es eine kugel ist: applyForce
     }
 
     public void setOnMouseDragged(MouseEvent e) {
@@ -112,6 +137,8 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
 
         double pX = renderer.screenToPhysicsX(x);
         double pY = renderer.screenToPhysicsY(y);
+
+        // 2. HIER DIE RICHTUNG FINDEN
 
         Point2D relativeMousePoint = calculateRelativePointOfMouse(x, y);
         double cueLength = calculateCueLength(relativeMousePoint);
@@ -331,5 +358,9 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
             setWhiteBallToDefaultPosition();
             placeBalls(balls, true);
         }
+        //renderer.setCueCoordinates(
+        //    Ball.WHITE.getBody().getTransform().getTranslation().x,
+        //    Ball.WHITE.getBody().getTransform().getTranslation().y
+        //);
     }
 }

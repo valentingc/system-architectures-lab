@@ -23,6 +23,10 @@ public class PhysicsEngine implements ContactListener, StepListener {
         world.addListener(this);
     }
 
+    public World getWorld() {
+        return world;
+    }
+
     public void addBodyFromGame(Body body) {
         world.addBody(body);
     }
