@@ -128,7 +128,7 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
         Point2D cueLength = calculateCueDistance(mousePressedScr,
             new Point2D(x,y));
 
-        Point2D newEnd = mousePressedScr.add(cueLength.multiply(10));
+        Point2D newEnd = mousePressedScr.add(cueLength.multiply(20));
         renderer.setCueEndCoordinates(newEnd.getX(), newEnd.getY());
         renderer.setDrawingState(Renderer.CueDrawingState.DRAGGED);
     }
