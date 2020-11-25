@@ -42,11 +42,12 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
     private boolean whiteBallTouchedOtherBall = false;
     private boolean didNotStrokeWhiteBall = false;
     private Vector2 whiteBallPositionPreFoul;
+    private Table table;
+
     public Game(Renderer renderer, PhysicsEngine engine) {
         this.renderer = renderer;
         this.engine = engine;
         this.initWorld();
-
         engine.setBallsCollisionListener(this);
         engine.setBallPocketedListener(this);
         engine.setObjectsRestListener(this);
@@ -161,8 +162,11 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
 
             b.setPosition(x, y);
             b.getBody().setLinearVelocity(0, 0);
-            engine.addBodyFromGame(b.getBody());
-            renderer.addBall(b);
+
+            if (!engine.isGameBodyKnown(b.getBody())) {
+                engine.addBodyFromGame(b.getBody());
+                renderer.addBall(b);
+            }
 
             row++;
 
@@ -197,7 +201,7 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
         engine.addBodyFromGame(Ball.WHITE.getBody());
         renderer.addBall(Ball.WHITE);
 
-        Table table = new Table();
+        table = new Table();
         engine.addBodyFromGame(table.getBody());
         renderer.setTable(table);
 
@@ -339,6 +343,11 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
 
             setWhiteBallToDefaultPosition();
             placeBalls(balls, true);
+            table = new Table();
+            engine.removeBodyFromGame(table.getBody());
+            engine.addBodyFromGame(table.getBody());
+            renderer.setTable(table);
+            pocketedBalls.clear();
         }
     }
 
