@@ -339,6 +339,7 @@ public class Renderer extends AnimationTimer {
         gc.setTransform(this.jfxCoords);
 
         if (drawingState.equals(CueDrawingState.PRESSED) || drawingState.equals(CueDrawingState.DRAGGED)) {
+            gc.setLineWidth(4);
             gc.strokeLine(cueStartX, cueStartY, cueEndX, cueEndY);
         }
     }
@@ -353,7 +354,6 @@ public class Renderer extends AnimationTimer {
     }
 
     public void setCueStartCoordinates(double x, double y) {
-        System.out.println("Start? " + x + ", "+y);
         cueStartX = x;
         cueStartY = y;
     }
