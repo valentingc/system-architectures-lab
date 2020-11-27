@@ -106,7 +106,7 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
             Body body = results.get(0).getBody();
             if (body.getUserData() instanceof Ball) {
                 Ball b = (Ball) body.getUserData();
-                body.applyImpulse(direction.multiply(7));
+                body.applyImpulse(direction.multiply(10));
                 if (!b.isWhite()) {
                     this.foul = true;
                     this.didNotStrokeWhiteBall = true;
