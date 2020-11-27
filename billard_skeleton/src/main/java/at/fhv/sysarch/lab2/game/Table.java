@@ -1,15 +1,11 @@
 package at.fhv.sysarch.lab2.game;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.BodyFixture;
-import org.dyn4j.geometry.Circle;
-import org.dyn4j.geometry.Geometry;
-import org.dyn4j.geometry.MassType;
-import org.dyn4j.geometry.Polygon;
-import org.dyn4j.geometry.Vector2;
+import org.dyn4j.geometry.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Table {
     private final Body tableBody;
@@ -41,10 +37,10 @@ public class Table {
         double fullCushionHeight = Constants.HEIGHT - Constants.POCKET_DIAMETER;
 
         Polygon rightCushionGeom = Geometry.createPolygon(
-            new Vector2(-Constants.CUSHION_SIZE * 0.5, fullCushionHeight * 0.5 - Constants.POCKET_RADIUS ),
-            new Vector2(-Constants.CUSHION_SIZE * 0.5, -fullCushionHeight * 0.5 + Constants.POCKET_RADIUS),
-            new Vector2(Constants.CUSHION_SIZE * 0.5, -fullCushionHeight * 0.5),
-            new Vector2(Constants.CUSHION_SIZE * 0.5, fullCushionHeight * 0.5));
+                new Vector2(-Constants.CUSHION_SIZE * 0.5, fullCushionHeight * 0.5 - Constants.POCKET_RADIUS),
+                new Vector2(-Constants.CUSHION_SIZE * 0.5, -fullCushionHeight * 0.5 + Constants.POCKET_RADIUS),
+                new Vector2(Constants.CUSHION_SIZE * 0.5, -fullCushionHeight * 0.5),
+                new Vector2(Constants.CUSHION_SIZE * 0.5, fullCushionHeight * 0.5));
 
         Polygon leftCushionGeom = Geometry.createPolygon(
                 new Vector2(-Constants.CUSHION_SIZE * 0.5, fullCushionHeight * 0.5),
@@ -58,20 +54,20 @@ public class Table {
 
         // the half cushions width is reduced by half of the corner pocket size
         // and half center pocket size
-        double halfCushionWidth = Constants.WIDTH  * 0.5 - Constants.POCKET_DIAMETER;
+        double halfCushionWidth = Constants.WIDTH * 0.5 - Constants.POCKET_DIAMETER;
         double halfCushionX = halfCushionWidth * 0.5 + Constants.POCKET_RADIUS;
 
         Polygon topLeftCushionGeom = Geometry.createPolygon(
-            new Vector2(-halfCushionWidth * 0.5, -Constants.CUSHION_SIZE * 0.5),
-            new Vector2(halfCushionWidth * 0.5, -Constants.CUSHION_SIZE * 0.5),
-            new Vector2(halfCushionWidth * 0.5 - Constants.POCKET_RADIUS * 0.1, Constants.CUSHION_SIZE * 0.5),
-            new Vector2(-halfCushionWidth * 0.5 + Constants.POCKET_RADIUS, Constants.CUSHION_SIZE * 0.5));
+                new Vector2(-halfCushionWidth * 0.5, -Constants.CUSHION_SIZE * 0.5),
+                new Vector2(halfCushionWidth * 0.5, -Constants.CUSHION_SIZE * 0.5),
+                new Vector2(halfCushionWidth * 0.5 - Constants.POCKET_RADIUS * 0.1, Constants.CUSHION_SIZE * 0.5),
+                new Vector2(-halfCushionWidth * 0.5 + Constants.POCKET_RADIUS, Constants.CUSHION_SIZE * 0.5));
 
         Polygon topRightCushionGeom = Geometry.createPolygon(
-            new Vector2(-halfCushionWidth * 0.5, -Constants.CUSHION_SIZE * 0.5),
-            new Vector2(halfCushionWidth * 0.5, -Constants.CUSHION_SIZE * 0.5),
-            new Vector2(halfCushionWidth * 0.5 - Constants.POCKET_RADIUS, Constants.CUSHION_SIZE * 0.5),
-            new Vector2(-halfCushionWidth * 0.5 + Constants.POCKET_RADIUS * 0.1, Constants.CUSHION_SIZE * 0.5));
+                new Vector2(-halfCushionWidth * 0.5, -Constants.CUSHION_SIZE * 0.5),
+                new Vector2(halfCushionWidth * 0.5, -Constants.CUSHION_SIZE * 0.5),
+                new Vector2(halfCushionWidth * 0.5 - Constants.POCKET_RADIUS, Constants.CUSHION_SIZE * 0.5),
+                new Vector2(-halfCushionWidth * 0.5 + Constants.POCKET_RADIUS * 0.1, Constants.CUSHION_SIZE * 0.5));
 
         Polygon bottomRightCushionGeom = Geometry.createPolygon(
                 new Vector2(-halfCushionWidth * 0.5, -Constants.CUSHION_SIZE * 0.5),
@@ -80,10 +76,10 @@ public class Table {
                 new Vector2(-halfCushionWidth * 0.5 + Constants.POCKET_RADIUS, Constants.CUSHION_SIZE * 0.5));
 
         Polygon bottomLeftCushionGeom = Geometry.createPolygon(
-            new Vector2(-halfCushionWidth * 0.5, -Constants.CUSHION_SIZE * 0.5),
-            new Vector2(halfCushionWidth * 0.5, -Constants.CUSHION_SIZE * 0.5),
-            new Vector2(halfCushionWidth * 0.5 - Constants.POCKET_RADIUS, Constants.CUSHION_SIZE * 0.5),
-            new Vector2(-halfCushionWidth * 0.5 + Constants.POCKET_RADIUS * 0.1, Constants.CUSHION_SIZE * 0.5));
+                new Vector2(-halfCushionWidth * 0.5, -Constants.CUSHION_SIZE * 0.5),
+                new Vector2(halfCushionWidth * 0.5, -Constants.CUSHION_SIZE * 0.5),
+                new Vector2(halfCushionWidth * 0.5 - Constants.POCKET_RADIUS, Constants.CUSHION_SIZE * 0.5),
+                new Vector2(-halfCushionWidth * 0.5 + Constants.POCKET_RADIUS * 0.1, Constants.CUSHION_SIZE * 0.5));
 
         bottomRightCushionGeom.rotate(Math.toRadians(180));
         bottomLeftCushionGeom.rotate(Math.toRadians(180));
@@ -99,7 +95,7 @@ public class Table {
         cushions.add(new BodyFixture(topRightCushionGeom));
         cushions.add(new BodyFixture(bottomLeftCushionGeom));
         cushions.add(new BodyFixture(bottomRightCushionGeom));
-        
+
         for (BodyFixture c : cushions) {
             c.setUserData(TablePart.CUSHION);
             c.setDensity(Constants.CUSHION_DENSITY);
@@ -117,7 +113,7 @@ public class Table {
         Circle bottomLeftPocketGeom = Geometry.createCircle(Constants.POCKET_RADIUS);
         Circle topRightPocketGeom = Geometry.createCircle(Constants.POCKET_RADIUS);
         Circle bottomRightPocketGeom = Geometry.createCircle(Constants.POCKET_RADIUS);
-        Circle topCenterPocketGeom = Geometry.createCircle(Constants.POCKET_RADIUS); 
+        Circle topCenterPocketGeom = Geometry.createCircle(Constants.POCKET_RADIUS);
         Circle bottomCenterPocketGeom = Geometry.createCircle(Constants.POCKET_RADIUS);
 
         topLeftPocketGeom.translate(-Constants.WIDTH * 0.5, -Constants.HEIGHT * 0.5);

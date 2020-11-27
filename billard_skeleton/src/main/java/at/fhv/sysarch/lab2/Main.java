@@ -1,6 +1,7 @@
 package at.fhv.sysarch.lab2;
 
 import at.fhv.sysarch.lab2.game.Game;
+import at.fhv.sysarch.lab2.physics.PhysicsEngine;
 import at.fhv.sysarch.lab2.rendering.Renderer;
 import javafx.application.Application;
 import javafx.scene.Group;
@@ -10,7 +11,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class Main extends Application {
-    private final static int SCENE_WIDTH  = 1920;
+    private final static int SCENE_WIDTH = 1920;
     private final static int SCENE_HEIGHT = 1080;
 
     @Override
@@ -19,12 +20,16 @@ public class Main extends Application {
         final Scene s = new Scene(root, SCENE_WIDTH, SCENE_HEIGHT, Color.BURLYWOOD);
         final Canvas c = new Canvas(SCENE_WIDTH, SCENE_WIDTH);
 
+        PhysicsEngine engine = new PhysicsEngine();
+
         Renderer renderer = new Renderer(
-            c.getGraphicsContext2D(),
-            SCENE_WIDTH, 
-            SCENE_HEIGHT);
-        
-        Game game = new Game(renderer);
+                c.getGraphicsContext2D(),
+                engine,
+                SCENE_WIDTH,
+                SCENE_HEIGHT
+        );
+
+        Game game = new Game(renderer, engine);
 
         c.setOnMousePressed(game::onMousePressed);
         c.setOnMouseReleased(game::onMouseReleased);
