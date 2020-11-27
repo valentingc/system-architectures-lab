@@ -67,7 +67,7 @@ public class PhysicsEngine implements ContactListener, StepListener {
             );
         }
 
-        return false;
+        return true;
     }
 
     @Override

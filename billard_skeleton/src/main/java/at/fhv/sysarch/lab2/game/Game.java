@@ -101,9 +101,7 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
         List<RaycastResult> results = new ArrayList<>();
 
         this.engine.getWorld().raycast(ray, Ball.Constants.RADIUS * 2, false, false, results);
-        if (results.isEmpty()) {
-            this.switchPlayers();
-        } else {
+        if (!results.isEmpty()) {
             // wenn es eine kugel ist: applyForce
             Body body = results.get(0).getBody();
             if (body.getUserData() instanceof Ball) {
@@ -226,9 +224,6 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
 
         if (b.isWhite()) {
             whiteBallPocketed = true;
-
-            declareFoul("White ball has been pocketed");
-            setWhiteBallToDefaultPosition();
         } else {
             pocketedBallsInRound++;
             updatePlayerScore(1);
@@ -239,7 +234,7 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
         }
 
         // Return value not needed
-        return false;
+        return true;
     }
 
     @Override
@@ -256,15 +251,17 @@ public class Game implements BallsCollisionListener, BallPocketedListener, Objec
         if (!roundRunning) {
             return;
         }
-
-        if (!whiteBallPocketed && !whiteBallTouchedOtherBall && 0 == pocketedBallsInRound) {
+        if (whiteBallPocketed) {
+            declareFoul("White ball has been pocketed");
+            setWhiteBallToDefaultPosition();
+        } else if (foul && didNotStrokeWhiteBall) {
+            declareFoul("Another ball than white was stroke");
+            setWhiteBallToPreFoulPosition();
+        } else if (!whiteBallPocketed && !whiteBallTouchedOtherBall && 0 == pocketedBallsInRound) {
             declareFoul("White ball has not touched other balls");
             setWhiteBallToPreFoulPosition();
         } else if (!whiteBallPocketed && whiteBallTouchedOtherBall && 0 == pocketedBallsInRound) {
             switchPlayers();
-        } else if (foul && didNotStrokeWhiteBall) {
-            declareFoul("Another ball than white was stroke");
-            setWhiteBallToPreFoulPosition();
         }
         if (foul) {
             switchPlayers();
