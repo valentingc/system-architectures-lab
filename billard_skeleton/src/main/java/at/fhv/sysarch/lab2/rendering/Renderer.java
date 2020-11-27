@@ -5,6 +5,7 @@ import at.fhv.sysarch.lab2.game.Table;
 import at.fhv.sysarch.lab2.game.Table.TablePart;
 import at.fhv.sysarch.lab2.physics.PhysicsEngine;
 import javafx.animation.AnimationTimer;
+import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.ArcType;
@@ -25,7 +26,6 @@ public class Renderer extends AnimationTimer {
     private Table table;
 
     private final GraphicsContext gc;
-    private final PhysicsEngine engine;
 
     private final double centerX;
     private final double centerY;
@@ -46,16 +46,10 @@ public class Renderer extends AnimationTimer {
     private String actionMessage;
     private int player1Score;
     private int player2Score;
-    private double xStart;
-    private double yStart;
-    private double xEnd;
-    private double yEnd;
-    private Ball whiteBall;
-    private CueDrawingState drawingState;
 
     private Optional<FrameListener> frameListener;
 
-    public Renderer(final GraphicsContext gc, int sceneWidth, int sceneHeight, PhysicsEngine engine) {
+    public Renderer(final GraphicsContext gc, PhysicsEngine engine, int sceneWidth, int sceneHeight) {
         this.gc = gc;
         this.engine = engine;
 
@@ -102,9 +96,6 @@ public class Renderer extends AnimationTimer {
     }
 
     public void addBall(Ball b) {
-        if (b.isWhite()) {
-            this.whiteBall = b;
-        }
         this.balls.add(b);
     }
 
@@ -148,7 +139,7 @@ public class Renderer extends AnimationTimer {
 
         this.frameListener.ifPresent(l -> l.onFrame(dt));
 
-        // TODO - FrameListener sollte das machen!
+        // TODO - Implement FrameListener handling updates
         this.engine.update(dt);
 
         this.clearWithColorBackground();
@@ -240,16 +231,6 @@ public class Renderer extends AnimationTimer {
         }
     }
 
-    private void drawCue() {
-        if (null == this.drawingState) {
-            return;
-        }
-
-        if (this.drawingState.equals(CueDrawingState.PRESSED) || this.drawingState.equals(CueDrawingState.DRAGGED)) {
-            this.gc.strokeLine(0, 0, this.xStart * 20, this.yStart * 20);
-        }
-    }
-
     private void drawFPS(double dt) {
         double fps = 1.0 / dt;
 
@@ -338,18 +319,42 @@ public class Renderer extends AnimationTimer {
         this.gc.fillOval(-r, -r, d, d);
     }
 
+    /* Custom implementations by Valentin & Dominic */
+
     public enum CueDrawingState {
+        NONE,
         PRESSED,
         DRAGGED,
         RELEASED
+    }
+
+    private final PhysicsEngine engine;
+    private CueDrawingState drawingState = CueDrawingState.NONE;
+    private double cueStartX;
+    private double cueStartY;
+    private double cueEndX;
+    private double cueEndY;
+
+    private void drawCue() {
+        gc.setTransform(this.jfxCoords);
+
+        if (drawingState.equals(CueDrawingState.PRESSED) || drawingState.equals(CueDrawingState.DRAGGED)) {
+            gc.setLineWidth(4);
+            gc.strokeLine(cueStartX, cueStartY, cueEndX, cueEndY);
+        }
     }
 
     public void setDrawingState(CueDrawingState drawingState) {
         this.drawingState = drawingState;
     }
 
-    public void setCueCoords(double xStart, double yStart) {
-        this.xStart = xStart * -1;
-        this.yStart = yStart * -1;
+    public void setCueEndCoordinates(double x, double y) {
+        cueEndX = x;
+        cueEndY = y;
+    }
+
+    public void setCueStartCoordinates(double x, double y) {
+        cueStartX = x;
+        cueStartY = y;
     }
 }

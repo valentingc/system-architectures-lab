@@ -11,24 +11,20 @@ import org.dyn4j.dynamics.contact.PersistedContactPoint;
 import org.dyn4j.dynamics.contact.SolvedContactPoint;
 import org.dyn4j.geometry.Vector2;
 
-import java.util.LinkedList;
-import java.util.List;
-
-/**
- * @author Valentin Goronjic
- * @author Dominic Luidold
- */
 public class PhysicsEngine implements ContactListener, StepListener {
     private final World world;
-    private final List<BallPocketedListener> ballPocketListeners;
-    private final List<ObjectsRestListener> objectRestListeners;
+    private BallsCollisionListener ballsCollisionListener;
+    private BallPocketedListener ballPocketedListener;
+    private ObjectsRestListener objectsRestListener;
 
     public PhysicsEngine() {
         world = new World();
         world.setGravity(World.ZERO_GRAVITY);
         world.addListener(this);
-        ballPocketListeners = new LinkedList<>();
-        objectRestListeners = new LinkedList<>();
+    }
+
+    public World getWorld() {
+        return world;
     }
 
     public void addBodyFromGame(Body body) {
@@ -39,94 +35,62 @@ public class PhysicsEngine implements ContactListener, StepListener {
         world.removeBody(body);
     }
 
+    public boolean isGameBodyKnown(Body body) {
+        return world.getBodies().contains(body);
+    }
+
     public void update(double deltaTime) {
         world.update(deltaTime);
     }
 
+    /* ###### ContactListener ###### */
+
     @Override
     public void sensed(ContactPoint point) {
+        // No implementation needed
     }
 
     @Override
     public boolean begin(ContactPoint point) {
-        return false;
+        if (point.isSensor()) {
+            // Return if ball pocketed
+            return false;
+        }
+
+        Body body1 = point.getBody1();
+        Body body2 = point.getBody2();
+
+        if (body1.getUserData() instanceof Ball && body2.getUserData() instanceof Ball) {
+            ballsCollisionListener.onBallsCollide(
+                    (Ball) body1.getUserData(),
+                    (Ball) body2.getUserData()
+            );
+        }
+
+        return true;
     }
 
     @Override
     public void end(ContactPoint point) {
-
-    }
-
-    public void addBallPocketedListener(BallPocketedListener ballPocketedListener) {
-        ballPocketListeners.add(ballPocketedListener);
-    }
-
-    public boolean removeBallPocketedListener(BallPocketedListener o) {
-        return ballPocketListeners.remove(o);
-    }
-
-    public void addObjectRestListener(ObjectsRestListener objectRestListener) {
-        objectRestListeners.add(objectRestListener);
-    }
-
-    public boolean removeObjectRestListener(ObjectsRestListener objectRestListener) {
-        return objectRestListeners.remove(objectRestListener);
-    }
-
-    private boolean isAPocketedBall(Body ball, Body pocket, PersistedContactPoint point) {
-        // World coordinates of ball
-        Vector2 ballPosition = ball.getTransform().getTranslation();
-
-        // relativ zu dem, was der tisch ist -> pocket ist teil vom tisch
-        Vector2 pocketPosition = pocket.getTransform().getTranslation();
-        Vector2 pocketCenter = point.getFixture2().getShape().getCenter();
-
-        // World coordinates of pocket
-        Vector2 pocketInWorld = pocketPosition.add(pocketCenter);
-
-        Vector2 difference = ballPosition.difference(pocketInWorld);
-        double magnitudeDifference = difference.getMagnitude();// was für eine größenordnung
-        // ist der unterschied
-        // abstand kleiner als delta -> pocketed
-        return magnitudeDifference <= 0.035;
+        // No implementation needed
     }
 
     @Override
     public boolean persist(PersistedContactPoint point) {
-        Body body1 = point.getBody1();
-        Body body2 = point.getBody2();
-
         if (point.isSensor()) {
-            // TODO - Enough overlap?
-            //  - how to use listeners?
-            if (body1.getUserData() instanceof Ball) {
-                // body1 is ball
-                Ball b = (Ball) body1.getUserData();
-                boolean isPocketed = isAPocketedBall(body1, body2, point);
+            Body ball;
+            Body pocket;
 
-                if (isPocketed) {
-                    System.out.println("11111Yep, ball is pocketed");
-                    System.out.println(b.getColor().toString());
-                }
-                for (BallPocketedListener listener : ballPocketListeners) {
-                    listener.onBallPocketed(b);
-                }
+            if (point.getBody1().getUserData() instanceof Ball) {
+                ball = point.getBody1();
+                pocket = point.getBody2();
+            } else {
+                ball = point.getBody2();
+                pocket = point.getBody1();
+            }
 
-                // wieso eigene klasse -> direkt game
-                // notify listener here
-
-            } else if (body2.getUserData() instanceof Ball) {
-                Ball b = (Ball) body2.getUserData();
-                // body2 is ball
-                boolean isPocketed = isAPocketedBall(body2, body1, point);
-
-                if (isPocketed) {
-                    System.out.println("22222Yep, ball is pocketed");
-                    System.out.println(b.getColor().toString());
-                }
-                for (BallPocketedListener listener : ballPocketListeners) {
-                    listener.onBallPocketed(b);
-                }
+            if (isBallPocketed(ball, pocket, point)) {
+                ballPocketedListener.onBallPocketed((Ball) ball.getUserData());
             }
         }
 
@@ -135,46 +99,79 @@ public class PhysicsEngine implements ContactListener, StepListener {
 
     @Override
     public boolean preSolve(ContactPoint point) {
+        // No implementation needed
         return true;
     }
 
     @Override
     public void postSolve(SolvedContactPoint point) {
-
+        // No implementation needed
     }
+
+    /* ###### StepListener ###### */
 
     @Override
     public void begin(Step step, World world) {
-        boolean areBallsMoving = false;
-        for (Ball b : Ball.values()) {
-            if (!b.getBody().getLinearVelocity().equals(new Vector2(0, 0))) {
-                areBallsMoving = true;
-                break;
-            }
-        }
-        if (areBallsMoving) {
-            for (ObjectsRestListener listener : objectRestListeners) {
-                listener.allObjectsMoving();
-            }
-        } else {
-            for (ObjectsRestListener listener : objectRestListeners) {
-                listener.allObjectsRest();
-            }
-        }
+        // No implementation needed
     }
 
     @Override
     public void updatePerformed(Step step, World world) {
-
+        // No implementation needed
     }
 
     @Override
     public void postSolve(Step step, World world) {
-
+        // No implementation needed
     }
 
     @Override
     public void end(Step step, World world) {
+        int ballsMoving = 0;
 
+        for (Ball ball : Ball.values()) {
+            if (!ball.getBody().getLinearVelocity().isZero()) {
+                ballsMoving++;
+            }
+        }
+
+        if (0 == ballsMoving) {
+            objectsRestListener.onStartAllObjectsRest();
+        } else {
+            objectsRestListener.onEndAllObjectsRest();
+        }
+    }
+
+    /* ###### Helper methods ###### */
+
+    private boolean isBallPocketed(Body ball, Body pocket, PersistedContactPoint point) {
+        // World coordinates of ball
+        Vector2 ballPosition = ball.getTransform().getTranslation();
+
+        // Pocket position (relative to table)
+        Vector2 pocketPosition = pocket.getTransform().getTranslation();
+        Vector2 pocketCenter = point.getFixture2().getShape().getCenter();
+
+        // World coordinates of pocket
+        Vector2 pocketInWorld = pocketPosition.add(pocketCenter);
+
+        Vector2 difference = ballPosition.difference(pocketInWorld);
+        double magnitudeDifference = difference.getMagnitude();
+
+        return magnitudeDifference <= Ball.Constants.RADIUS;
+    }
+
+    /* ###### Setter ###### */
+
+    public void setBallsCollisionListener(BallsCollisionListener ballsCollisionListener) {
+        this.ballsCollisionListener = ballsCollisionListener;
+    }
+
+    public void setBallPocketedListener(BallPocketedListener ballPocketedListener) {
+        this.ballPocketedListener = ballPocketedListener;
+    }
+
+    public void setObjectsRestListener(ObjectsRestListener objectsRestListener) {
+        this.objectsRestListener = objectsRestListener;
     }
 }
