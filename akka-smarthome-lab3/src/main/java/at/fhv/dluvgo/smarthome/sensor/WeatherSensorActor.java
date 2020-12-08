@@ -6,27 +6,27 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import at.fhv.dluvgo.smarthome.common.WeatherType;
-import at.fhv.dluvgo.smarthome.sensor.message.WeatherChangedMessage;
+import at.fhv.dluvgo.smarthome.sensor.message.EnvWeatherChangedMessage;
 
-public class WeatherSensorActor extends AbstractBehavior<WeatherChangedMessage> {
+public class WeatherSensorActor extends AbstractBehavior<EnvWeatherChangedMessage> {
     private WeatherType weather;
 
-    public static Behavior<WeatherChangedMessage> create() {
+    public static Behavior<EnvWeatherChangedMessage> create() {
         return Behaviors.setup(WeatherSensorActor::new);
     }
 
-    public WeatherSensorActor(ActorContext<WeatherChangedMessage> context) {
+    public WeatherSensorActor(ActorContext<EnvWeatherChangedMessage> context) {
         super(context);
     }
 
     @Override
-    public Receive<WeatherChangedMessage> createReceive() {
+    public Receive<EnvWeatherChangedMessage> createReceive() {
         return newReceiveBuilder()
-            .onMessage(WeatherChangedMessage.class, this::onWeatherChanged)
+            .onMessage(EnvWeatherChangedMessage.class, this::onEnvWeatherChanged)
             .build();
     }
 
-    private Behavior<WeatherChangedMessage> onWeatherChanged(WeatherChangedMessage msg) {
+    private Behavior<EnvWeatherChangedMessage> onEnvWeatherChanged(EnvWeatherChangedMessage msg) {
         weather = WeatherType.values()[msg.getWeather()];
         getContext().getLog().info("Received new weather value");
 

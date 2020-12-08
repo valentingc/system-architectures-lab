@@ -3,27 +3,34 @@ package at.fhv.dluvgo.smarthome;
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.ActorSystem;
 import akka.actor.typed.Behavior;
-import akka.actor.typed.LogOptions;
 import akka.actor.typed.Terminated;
 import akka.actor.typed.javadsl.Behaviors;
+import at.fhv.dluvgo.smarthome.actuators.AirConditioningActor;
+import at.fhv.dluvgo.smarthome.actuators.message.TemperatureChangedMessage;
 import at.fhv.dluvgo.smarthome.environment.EnvironmentActor;
 import at.fhv.dluvgo.smarthome.environment.message.InitEnvironmentMessage;
 import at.fhv.dluvgo.smarthome.sensor.TemperatureSensorActor;
 import at.fhv.dluvgo.smarthome.sensor.WeatherSensorActor;
-import at.fhv.dluvgo.smarthome.sensor.message.TemperatureChangedMessage;
-import at.fhv.dluvgo.smarthome.sensor.message.WeatherChangedMessage;
+import at.fhv.dluvgo.smarthome.sensor.message.EnvTemperatureChangedMessage;
+import at.fhv.dluvgo.smarthome.sensor.message.EnvWeatherChangedMessage;
 
 public class SmartHomeController {
 
     public static Behavior<Void> create() {
         return Behaviors.setup(
             context -> {
+                // Actuators
+                ActorRef<TemperatureChangedMessage> airConditioning = context.spawn(
+                    AirConditioningActor.create(),
+                    "ac-actuator"
+                );
+
                 // Sensors
-                ActorRef<TemperatureChangedMessage> temperatureSensor = context.spawn(
-                    TemperatureSensorActor.create(),
+                ActorRef<EnvTemperatureChangedMessage> temperatureSensor = context.spawn(
+                    TemperatureSensorActor.create(airConditioning),
                     "temperature-sensor"
                 );
-                ActorRef<WeatherChangedMessage> weatherSensor = context.spawn(
+                ActorRef<EnvWeatherChangedMessage> weatherSensor = context.spawn(
                     WeatherSensorActor.create(),
                     "weather-sensor"
                 );

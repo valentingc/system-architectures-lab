@@ -2,10 +2,10 @@ package at.fhv.dluvgo.smarthome.sensor.message;
 
 import at.fhv.dluvgo.smarthome.Message;
 
-public class TemperatureChangedMessage implements Message {
+public class EnvTemperatureChangedMessage implements Message {
     private final float temperature;
 
-    public TemperatureChangedMessage(float temperature) {
+    public EnvTemperatureChangedMessage(float temperature) {
         this.temperature = temperature;
     }
 
