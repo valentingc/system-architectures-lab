@@ -15,7 +15,7 @@ public class WeatherSensorActor extends AbstractBehavior<EnvWeatherChangedMessag
         return Behaviors.setup(WeatherSensorActor::new);
     }
 
-    public WeatherSensorActor(ActorContext<EnvWeatherChangedMessage> context) {
+    private WeatherSensorActor(ActorContext<EnvWeatherChangedMessage> context) {
         super(context);
     }
 
@@ -26,9 +26,10 @@ public class WeatherSensorActor extends AbstractBehavior<EnvWeatherChangedMessag
             .build();
     }
 
+    // TODO - JavaDoc once blinds and media station have been added
     private Behavior<EnvWeatherChangedMessage> onEnvWeatherChanged(EnvWeatherChangedMessage msg) {
         weather = WeatherType.values()[msg.getWeather()];
-        getContext().getLog().info("Received new weather value");
+        getContext().getLog().debug("Received new weather value");
 
         return this;
     }

@@ -51,7 +51,7 @@ public class TemperatureSensorActor extends AbstractBehavior<EnvTemperatureChang
         EnvTemperatureChangedMessage msg
     ) {
         temperature = new Temperature(Temperature.Unit.CELSIUS, msg.getTemperature());
-        getContext().getLog().info("Received new temperature values");
+        getContext().getLog().debug("Received new temperature values");
 
         airConditioning.tell(new TemperatureChangedMessage(temperature));
         return this;
