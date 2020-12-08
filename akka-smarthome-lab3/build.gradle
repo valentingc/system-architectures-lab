@@ -15,7 +15,7 @@ dependencies {
   testCompile 'junit:junit:4.13.1'
 }
 
-mainClassName = "com.example.SmartHomeController"
+mainClassName = "at.fhv.dluvgo.smarthome.SmartHomeController"
 
 run {
   standardInput = System.in

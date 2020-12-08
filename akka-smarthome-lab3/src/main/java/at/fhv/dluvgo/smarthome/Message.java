@@ -1,4 +1,4 @@
-package at.fhv.dluvgo.smarthome.messages;
+package at.fhv.dluvgo.smarthome;
 
 /**
  * @author Valentin
