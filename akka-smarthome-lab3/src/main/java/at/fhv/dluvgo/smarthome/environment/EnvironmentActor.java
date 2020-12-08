@@ -1,25 +1,25 @@
-package at.fhv.dluvgo.smarthome;
+package at.fhv.dluvgo.smarthome.environment;
 
+import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.TimerScheduler;
-import at.fhv.dluvgo.smarthome.messages.InitEnvironmentMessage;
-import at.fhv.dluvgo.smarthome.messages.Message;
-import at.fhv.dluvgo.smarthome.messages.TemperatureChangeRequestMessage;
-import at.fhv.dluvgo.smarthome.messages.WeatherChangeRequestMessage;
+import at.fhv.dluvgo.smarthome.Message;
+import at.fhv.dluvgo.smarthome.common.WeatherType;
+import at.fhv.dluvgo.smarthome.environment.message.InitEnvironmentMessage;
+import at.fhv.dluvgo.smarthome.environment.message.TemperatureChangeRequestMessage;
+import at.fhv.dluvgo.smarthome.environment.message.WeatherChangeRequestMessage;
+import at.fhv.dluvgo.smarthome.sensor.TemperatureSensorActor;
+import at.fhv.dluvgo.smarthome.sensor.WeatherSensorActor;
+import at.fhv.dluvgo.smarthome.sensor.message.TemperatureChangedMessage;
+import at.fhv.dluvgo.smarthome.sensor.message.WeatherChangedMessage;
 import java.time.Duration;
 import java.util.Random;
 
 public class EnvironmentActor extends AbstractBehavior<Message> {
-    private enum WeatherType {
-        SUNNY,
-        CLOUDY,
-        RAINY;
-    }
-
     private static class Timeout implements Message {
         // TODO - Actually needed?
     }
@@ -27,30 +27,42 @@ public class EnvironmentActor extends AbstractBehavior<Message> {
     private static final Object TEMPERATURE_TIMER_KEY = new Object();
     private static final Object WEATHER_TIMER_KEY = new Object();
 
+    private final ActorRef<TemperatureChangedMessage> temperatureSensor;
+    private final ActorRef<WeatherChangedMessage> weatherSensor;
+
     private final TimerScheduler<Message> temperatureTimer;
     private final TimerScheduler<Message> weatherTimer;
 
-    private WeatherType currentWeather = WeatherType.SUNNY;
+    private int currentWeather = 0;
     private float currentTemperature = 22.0f;
 
     /* ### Instance of EnvironmentActor ###*/
 
-    public static Behavior<Message> create() {
+    public static Behavior<Message> create(
+        ActorRef<TemperatureChangedMessage> temperatureSensor,
+        ActorRef<WeatherChangedMessage> weatherSensor
+    ) {
         return Behaviors.setup(ctx -> Behaviors.withTimers(timers -> new EnvironmentActor(
             ctx,
             timers,
-            timers
+            timers,
+            temperatureSensor,
+            weatherSensor
         )));
     }
 
     private EnvironmentActor(
         ActorContext<Message> context,
         TimerScheduler<Message> temperatureTimer,
-        TimerScheduler<Message> weatherTimer
+        TimerScheduler<Message> weatherTimer,
+        ActorRef<TemperatureChangedMessage> temperatureSensor,
+        ActorRef<WeatherChangedMessage> weatherSensor
     ) {
         super(context);
         this.temperatureTimer = temperatureTimer;
         this.weatherTimer = weatherTimer;
+        this.temperatureSensor = temperatureSensor;
+        this.weatherSensor = weatherSensor;
     }
 
     /* ### Message handling ### */
@@ -74,7 +86,7 @@ public class EnvironmentActor extends AbstractBehavior<Message> {
      * @return this - no change of behaviour
      */
     private Behavior<Message> onInitEnvironment(Message msg) {
-        getContext().getLog().debug("Initializing environment..");
+        getContext().getLog().info("Initializing environment..");
 
         temperatureTimer.startTimerAtFixedRate(
             TEMPERATURE_TIMER_KEY,
@@ -114,6 +126,7 @@ public class EnvironmentActor extends AbstractBehavior<Message> {
             currentTemperature += 0.7;
         }
 
+        temperatureSensor.tell(new TemperatureChangedMessage(currentTemperature));
         getContext().getLog().info("Current temperature now is: {}", currentTemperature);
         return this;
     }
@@ -126,14 +139,19 @@ public class EnvironmentActor extends AbstractBehavior<Message> {
      * @return this - no change of behaviour
      */
     private Behavior<Message> onWeatherChangeRequest(WeatherChangeRequestMessage msg) {
-        currentWeather = WeatherType.values()[new Random().nextInt(WeatherType.values().length)];
+        currentWeather = new Random().nextInt(WeatherType.values().length);
 
-        getContext().getLog().info("Current weather now is: {}", currentWeather);
+        weatherSensor.tell(new WeatherChangedMessage(currentWeather));
+        getContext().getLog().info(
+            "Current weather now is: {}",
+            WeatherType.values()[currentWeather]
+        );
         return this;
     }
 
+    // TODO
     private Behavior<Message> onTimeout() {
-        getContext().getLog().debug("Timeout received");
+        getContext().getLog().info("Timeout received");
         return this;
     }
 }
