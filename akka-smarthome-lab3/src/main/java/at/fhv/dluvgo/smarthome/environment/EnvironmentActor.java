@@ -18,10 +18,6 @@ import java.time.Duration;
 import java.util.Random;
 
 public class EnvironmentActor extends AbstractBehavior<Message> {
-    private static class Timeout implements Message {
-        // TODO - Actually needed?
-    }
-
     private static final Object TEMPERATURE_TIMER_KEY = new Object();
     private static final Object WEATHER_TIMER_KEY = new Object();
 
@@ -71,7 +67,6 @@ public class EnvironmentActor extends AbstractBehavior<Message> {
             .onMessage(InitEnvironmentMessage.class, this::onInitEnvironment)
             .onMessage(TemperatureChangeRequestMessage.class, this::onTemperatureChangeRequest)
             .onMessage(WeatherChangeRequestMessage.class, this::onWeatherChangeRequest)
-            .onMessage(Timeout.class, message -> onTimeout())
             .build();
     }
 
@@ -89,7 +84,7 @@ public class EnvironmentActor extends AbstractBehavior<Message> {
         temperatureTimer.startTimerAtFixedRate(
             TEMPERATURE_TIMER_KEY,
             new TemperatureChangeRequestMessage(),
-            Duration.ofSeconds(20)
+            Duration.ofSeconds(20) // TODO - Find best value
         );
 
         weatherTimer.startTimerAtFixedRate(
@@ -144,12 +139,6 @@ public class EnvironmentActor extends AbstractBehavior<Message> {
             "Current weather now is: {}",
             WeatherType.values()[currentWeather]
         );
-        return this;
-    }
-
-    // TODO
-    private Behavior<Message> onTimeout() {
-        getContext().getLog().info("Timeout received");
         return this;
     }
 }

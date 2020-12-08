@@ -16,7 +16,17 @@ import at.fhv.dluvgo.smarthome.sensor.message.EnvWeatherChangedMessage;
 
 public class SmartHomeController {
 
-    public static Behavior<Void> create() {
+    public static void main(String[] args) {
+        ActorSystem.create(create(), "SmartHomeSystem");
+    }
+
+    /**
+     * Initializes all actors (actuators, sensors and the environment) and sends initial
+     * {@link InitEnvironmentMessage} to start all automation processes.
+     *
+     * @return Configured {@link Behavior}
+     */
+    private static Behavior<Void> create() {
         return Behaviors.setup(
             context -> {
                 // Actuators
@@ -50,9 +60,5 @@ public class SmartHomeController {
                     .build();
             }
         );
-    }
-
-    public static void main(String[] args) {
-        ActorSystem.create(create(), "SmartHomeSystem");
     }
 }
