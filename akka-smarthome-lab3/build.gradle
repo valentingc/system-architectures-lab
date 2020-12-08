@@ -15,7 +15,7 @@ dependencies {
   testCompile 'junit:junit:4.13.1'
 }
 
-mainClassName = "com.example.AkkaQuickstart"
+mainClassName = "com.example.SmartHomeController"
 
 run {
   standardInput = System.in
