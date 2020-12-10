@@ -1,11 +1,11 @@
-package at.fhv.dluvgo.smarthome.actuators;
+package at.fhv.dluvgo.smarthome.actuators.ac;
 
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
-import at.fhv.dluvgo.smarthome.actuators.message.TemperatureChangedMessage;
+import at.fhv.dluvgo.smarthome.actuators.ac.message.TemperatureChangedMessage;
 import at.fhv.dluvgo.smarthome.sensor.TemperatureSensorActor;
 
 public class AirConditioningActor extends AbstractBehavior<TemperatureChangedMessage> {
