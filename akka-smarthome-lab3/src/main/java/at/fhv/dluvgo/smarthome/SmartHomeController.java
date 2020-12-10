@@ -7,6 +7,8 @@ import akka.actor.typed.Terminated;
 import akka.actor.typed.javadsl.Behaviors;
 import at.fhv.dluvgo.smarthome.actuators.ac.AirConditioningActor;
 import at.fhv.dluvgo.smarthome.actuators.ac.message.TemperatureChangedMessage;
+import at.fhv.dluvgo.smarthome.actuators.blinds.BlindsActor;
+import at.fhv.dluvgo.smarthome.actuators.blinds.message.WeatherChangedMessage;
 import at.fhv.dluvgo.smarthome.environment.EnvironmentActor;
 import at.fhv.dluvgo.smarthome.environment.message.InitEnvironmentMessage;
 import at.fhv.dluvgo.smarthome.sensor.TemperatureSensorActor;
@@ -36,12 +38,16 @@ public class SmartHomeController {
                 );
 
                 // Sensors
+                ActorRef<WeatherChangedMessage> blindsACtor = context.spawn(
+                    BlindsActor.create(),
+                    "blinds"
+                );
                 ActorRef<EnvTemperatureChangedMessage> temperatureSensor = context.spawn(
                     TemperatureSensorActor.create(airConditioning),
                     "temperature-sensor"
                 );
                 ActorRef<EnvWeatherChangedMessage> weatherSensor = context.spawn(
-                    WeatherSensorActor.create(),
+                    WeatherSensorActor.create(blindsACtor),
                     "weather-sensor"
                 );
 
