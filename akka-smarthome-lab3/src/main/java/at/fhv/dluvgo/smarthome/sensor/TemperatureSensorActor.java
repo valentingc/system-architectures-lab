@@ -6,8 +6,8 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
-import at.fhv.dluvgo.smarthome.actuators.AirConditioningActor;
-import at.fhv.dluvgo.smarthome.actuators.message.TemperatureChangedMessage;
+import at.fhv.dluvgo.smarthome.actuators.ac.AirConditioningActor;
+import at.fhv.dluvgo.smarthome.actuators.ac.message.TemperatureChangedMessage;
 import at.fhv.dluvgo.smarthome.common.Temperature;
 import at.fhv.dluvgo.smarthome.sensor.message.EnvTemperatureChangedMessage;
 

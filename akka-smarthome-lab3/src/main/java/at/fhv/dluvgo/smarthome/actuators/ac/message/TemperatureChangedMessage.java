@@ -1,4 +1,4 @@
-package at.fhv.dluvgo.smarthome.actuators.message;
+package at.fhv.dluvgo.smarthome.actuators.ac.message;
 
 import at.fhv.dluvgo.smarthome.Message;
 import at.fhv.dluvgo.smarthome.common.Temperature;
