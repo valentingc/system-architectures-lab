@@ -7,13 +7,9 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import at.fhv.dluvgo.smarthome.Message;
-import at.fhv.dluvgo.smarthome.actuators.blinds.message.CloseBlindsRequestMessage;
 import at.fhv.dluvgo.smarthome.actuators.blinds.message.MediaPlaybackStartedMessage;
 import at.fhv.dluvgo.smarthome.actuators.blinds.message.MediaPlaybackStoppedMessage;
-import at.fhv.dluvgo.smarthome.actuators.blinds.message.OpenBlindsRequestMessage;
 import at.fhv.dluvgo.smarthome.actuators.mediastation.message.MediaPlaybackRequestMessage;
-import at.fhv.dluvgo.smarthome.actuators.mediastation.message.MediaPlaybackStateRequestMessage;
-import at.fhv.dluvgo.smarthome.actuators.mediastation.message.MediaPlaybackStateResponseMessage;
 import at.fhv.dluvgo.smarthome.actuators.mediastation.message.StopMediaPlaybackRequestMessage;
 
 public class MediaStationActor extends AbstractBehavior<Message> {
@@ -25,10 +21,7 @@ public class MediaStationActor extends AbstractBehavior<Message> {
         return Behaviors.setup(ctx -> new MediaStationActor(ctx, blinds));
     }
 
-    private MediaStationActor(
-        ActorContext<Message> context,
-        ActorRef<Message> blinds
-    ) {
+    private MediaStationActor(ActorContext<Message> context, ActorRef<Message> blinds) {
         super(context);
         this.blinds = blinds;
     }
@@ -36,23 +29,9 @@ public class MediaStationActor extends AbstractBehavior<Message> {
     @Override
     public Receive<Message> createReceive() {
         return newReceiveBuilder()
-            .onMessage(MediaPlaybackStateRequestMessage.class, this::onMediaPlaybackStateRequest)
             .onMessage(MediaPlaybackRequestMessage.class, this::onMediaPlaybackRequest)
             .onMessage(StopMediaPlaybackRequestMessage.class, this::onStopMediaPlaybackRequest)
             .build();
-    }
-
-    /**
-     * Handles a playback state request ({@link MediaPlaybackStateRequestMessage}) and provides
-     * the requested information accordingly ({@link MediaPlaybackStateResponseMessage}).
-     *
-     * @param msg The playback state request
-     *
-     * @return this - no change of behaviour
-     */
-    private Behavior<Message> onMediaPlaybackStateRequest(MediaPlaybackStateRequestMessage msg) {
-        msg.getReplyTo().tell(new MediaPlaybackStateResponseMessage(mediaPlaying));
-        return this;
     }
 
     /**
@@ -80,7 +59,6 @@ public class MediaStationActor extends AbstractBehavior<Message> {
             );
 
             blinds.tell(new MediaPlaybackStartedMessage());
-            blinds.tell(new CloseBlindsRequestMessage());
         }
 
         return this;
@@ -106,7 +84,6 @@ public class MediaStationActor extends AbstractBehavior<Message> {
             );
 
             blinds.tell(new MediaPlaybackStoppedMessage());
-            blinds.tell(new OpenBlindsRequestMessage());
         } else {
             getContext().getLog().info(
                 "Cannot stop media playback, there currently is no active playback"
