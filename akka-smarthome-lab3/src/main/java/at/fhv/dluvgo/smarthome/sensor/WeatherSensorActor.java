@@ -6,27 +6,25 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
+import at.fhv.dluvgo.smarthome.Message;
 import at.fhv.dluvgo.smarthome.actuators.ac.message.TemperatureChangedMessage;
 import at.fhv.dluvgo.smarthome.actuators.blinds.message.WeatherChangedMessage;
 import at.fhv.dluvgo.smarthome.common.WeatherType;
 import at.fhv.dluvgo.smarthome.sensor.message.EnvWeatherChangedMessage;
 
 public class WeatherSensorActor extends AbstractBehavior<EnvWeatherChangedMessage> {
+    private final ActorRef<Message> blinds;
     private WeatherType weather;
-    private ActorRef<WeatherChangedMessage> blinds;
 
     public static Behavior<EnvWeatherChangedMessage> create(
-        ActorRef<WeatherChangedMessage> blinds
+        ActorRef<Message> blinds
     ) {
-        return Behaviors.setup(ctx -> new WeatherSensorActor(
-            ctx,
-            blinds
-        ));
+        return Behaviors.setup(ctx -> new WeatherSensorActor(ctx, blinds));
     }
 
     private WeatherSensorActor(
         ActorContext<EnvWeatherChangedMessage> context,
-        ActorRef<WeatherChangedMessage> blinds
+        ActorRef<Message> blinds
     ) {
         super(context);
         this.blinds = blinds;

@@ -8,18 +8,31 @@ import akka.actor.typed.javadsl.Behaviors;
 import at.fhv.dluvgo.smarthome.actuators.ac.AirConditioningActor;
 import at.fhv.dluvgo.smarthome.actuators.ac.message.TemperatureChangedMessage;
 import at.fhv.dluvgo.smarthome.actuators.blinds.BlindsActor;
-import at.fhv.dluvgo.smarthome.actuators.blinds.message.WeatherChangedMessage;
+import at.fhv.dluvgo.smarthome.actuators.mediastation.MediaStationActor;
+import at.fhv.dluvgo.smarthome.actuators.mediastation.message.MediaPlaybackRequestMessage;
 import at.fhv.dluvgo.smarthome.environment.EnvironmentActor;
 import at.fhv.dluvgo.smarthome.environment.message.InitEnvironmentMessage;
 import at.fhv.dluvgo.smarthome.sensor.TemperatureSensorActor;
 import at.fhv.dluvgo.smarthome.sensor.WeatherSensorActor;
 import at.fhv.dluvgo.smarthome.sensor.message.EnvTemperatureChangedMessage;
 import at.fhv.dluvgo.smarthome.sensor.message.EnvWeatherChangedMessage;
+import java.io.IOException;
 
 public class SmartHomeController {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         ActorSystem.create(create(), "SmartHomeSystem");
+
+//        boolean running = true;
+//        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+//        while (running) {
+//            String input = reader.readLine();
+//            if (input.equals("quit")) {
+//                running = false;
+//            } else if (input.equals("playMovie")) {
+//
+//            }
+//        }
     }
 
     /**
@@ -36,18 +49,22 @@ public class SmartHomeController {
                     AirConditioningActor.create(),
                     "ac-actuator"
                 );
+                ActorRef<Message> blinds = context.spawn(
+                    BlindsActor.create(),
+                    "blinds-actuator"
+                );
+                ActorRef<Message> mediaStation = context.spawn(
+                    MediaStationActor.create(blinds),
+                    "media-station-actuator"
+                );
 
                 // Sensors
-                ActorRef<WeatherChangedMessage> blindsACtor = context.spawn(
-                    BlindsActor.create(),
-                    "blinds"
-                );
                 ActorRef<EnvTemperatureChangedMessage> temperatureSensor = context.spawn(
                     TemperatureSensorActor.create(airConditioning),
                     "temperature-sensor"
                 );
                 ActorRef<EnvWeatherChangedMessage> weatherSensor = context.spawn(
-                    WeatherSensorActor.create(blindsACtor),
+                    WeatherSensorActor.create(blinds),
                     "weather-sensor"
                 );
 
@@ -59,6 +76,7 @@ public class SmartHomeController {
 
                 // Init environment
                 environment.tell(new InitEnvironmentMessage());
+                mediaStation.tell(new MediaPlaybackRequestMessage("test"));
 
                 // Stop on termination
                 return Behaviors.receive(Void.class)
