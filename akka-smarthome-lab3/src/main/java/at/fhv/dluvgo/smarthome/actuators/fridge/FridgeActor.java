@@ -1,0 +1,70 @@
+package at.fhv.dluvgo.smarthome.actuators.fridge;
+
+import akka.actor.typed.Behavior;
+import akka.actor.typed.javadsl.AbstractBehavior;
+import akka.actor.typed.javadsl.ActorContext;
+import akka.actor.typed.javadsl.Behaviors;
+import akka.actor.typed.javadsl.Receive;
+import at.fhv.dluvgo.smarthome.actuators.fridge.message.AddProductMessage;
+import at.fhv.dluvgo.smarthome.actuators.fridge.message.FridgeMessage;
+import java.util.LinkedList;
+import java.util.List;
+
+public class FridgeActor {
+    private static final float MAX_WEIGHT = 20.00f; // Weight measured in kg
+    private static final int MAX_ITEMS = 25;
+
+    public static final class Product {
+        public final String name;
+        public final float weight;
+        public final float price;
+
+        public Product(String name, float weight, float price) {
+            this.name = name;
+            this.weight = weight;
+            this.price = price;
+        }
+    }
+
+    public static final class DefaultFridgeBehavior extends AbstractBehavior<FridgeMessage> {
+        private final List<Product> products = new LinkedList<>();
+
+        public static Behavior<FridgeMessage> create(List<Product> products) {
+            return Behaviors.setup(ctx -> new DefaultFridgeBehavior(ctx, products));
+        }
+
+        private DefaultFridgeBehavior(ActorContext<FridgeMessage> context, List<Product> products) {
+            super(context);
+            this.products.addAll(products);
+        }
+
+        @Override
+        public Receive<FridgeMessage> createReceive() {
+            return newReceiveBuilder()
+                .onMessage(AddProductMessage.class, this::onAddProduct)
+                .build();
+        }
+
+        private Behavior<FridgeMessage> onAddProduct(AddProductMessage msg) {
+            Product product = msg.getProduct();
+
+            if ((products.size() + 1) > MAX_ITEMS) {
+                // TODO - max items reached
+            } else if ((calculateTotalWeight() + product.weight) > MAX_WEIGHT) {
+                // TODO - max weight reached
+            }
+
+            products.add(product);
+            return Behaviors.same();
+        }
+
+        private float calculateTotalWeight() {
+            float weight = 0.0f;
+            for (Product product : products) {
+                weight += product.weight;
+            }
+
+            return weight;
+        }
+    }
+}
