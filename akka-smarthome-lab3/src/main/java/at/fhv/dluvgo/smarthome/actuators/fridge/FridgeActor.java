@@ -12,6 +12,7 @@ import at.fhv.dluvgo.smarthome.actuators.fridge.message.RequestStoredProductsMes
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.ResponseStoredProductsMessage;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 public class FridgeActor {
     private static final float MAX_WEIGHT = 20.00f; // Weight measured in kg
@@ -42,6 +43,23 @@ public class FridgeActor {
             this.name = name;
             this.weight = weight;
             this.price = price;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            Product product = (Product) o;
+            return name.toLowerCase().equals(product.name.toLowerCase());
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name.toLowerCase());
         }
     }
 
@@ -107,6 +125,7 @@ public class FridgeActor {
                     amountLeft += 1;
                 }
             }
+            products.remove(product);
             if (amountLeft < 1.0f) {
                 getContext().getLog().info(
                     "Product {} is running out. Need to re-order",
