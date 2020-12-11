@@ -12,7 +12,7 @@ import java.util.List;
 
 public class FridgeActor {
     private static final float MAX_WEIGHT = 20.00f; // Weight measured in kg
-    private static final int MAX_ITEMS = 1;
+    private static final int MAX_ITEMS = 20;
 
     public static Behavior<FridgeMessage> create() {
         return DefaultFridgeBehavior.create(new LinkedList<>());
