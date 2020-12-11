@@ -12,7 +12,11 @@ import java.util.List;
 
 public class FridgeActor {
     private static final float MAX_WEIGHT = 20.00f; // Weight measured in kg
-    private static final int MAX_ITEMS = 25;
+    private static final int MAX_ITEMS = 1;
+
+    public static Behavior<FridgeMessage> create() {
+        return DefaultFridgeBehavior.create(new LinkedList<>());
+    }
 
     public static final class Product {
         public final String name;
@@ -26,6 +30,25 @@ public class FridgeActor {
         }
     }
 
+    public static final class FullFridgeBehavior extends AbstractBehavior<FridgeMessage> {
+
+        public static Behavior<FridgeMessage> create() {
+            return Behaviors.setup(ctx -> new FullFridgeBehavior(ctx));
+        }
+
+        public FullFridgeBehavior(ActorContext<FridgeMessage> context) {
+            super(context);
+            getContext().getLog().info("Switching Fridge Behavior: Full");
+        }
+
+        @Override
+        public Receive<FridgeMessage> createReceive() {
+            return newReceiveBuilder()
+                .build();
+                // todo: add some supported messages
+        }
+    }
+
     public static final class DefaultFridgeBehavior extends AbstractBehavior<FridgeMessage> {
         private final List<Product> products = new LinkedList<>();
 
@@ -36,6 +59,7 @@ public class FridgeActor {
         private DefaultFridgeBehavior(ActorContext<FridgeMessage> context, List<Product> products) {
             super(context);
             this.products.addAll(products);
+            getContext().getLog().info("Switching Fridge Behavior: Default");
         }
 
         @Override
@@ -50,8 +74,10 @@ public class FridgeActor {
 
             if ((products.size() + 1) > MAX_ITEMS) {
                 // TODO - max items reached
+                return FullFridgeBehavior.create();
             } else if ((calculateTotalWeight() + product.weight) > MAX_WEIGHT) {
                 // TODO - max weight reached
+                return FullFridgeBehavior.create();
             }
 
             products.add(product);
