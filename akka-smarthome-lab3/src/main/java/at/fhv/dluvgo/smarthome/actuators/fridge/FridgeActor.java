@@ -6,6 +6,7 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.AddProductMessage;
+import at.fhv.dluvgo.smarthome.actuators.fridge.message.ConsumeProductMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.FridgeMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.RequestStoredProductsMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.ResponseStoredProductsMessage;
@@ -45,6 +46,8 @@ public class FridgeActor {
     }
 
     public static final class FullFridgeBehavior extends AbstractBehavior<FridgeMessage> {
+        // TODO: change this to a map, because one product can be added multiple times
+        // so we need a mapping between product <-> amount
         private List<Product> products;
 
         public FullFridgeBehavior(ActorContext<FridgeMessage> context, List<Product> products) {
@@ -86,12 +89,19 @@ public class FridgeActor {
         public Receive<FridgeMessage> createReceive() {
             return newReceiveBuilder()
                 .onMessage(AddProductMessage.class, this::onAddProduct)
-                .onMessage(RequestStoredProductsMessage.class, this::getStoredProducts)
+                .onMessage(RequestStoredProductsMessage.class, this::onGetStoredProducts)
+                .onMessage(ConsumeProductMessage.class, this::onConsumeProduct)
                 .build();
         }
 
-        private Behavior<FridgeMessage> getStoredProducts(RequestStoredProductsMessage msg) {
+        private Behavior<FridgeMessage> onGetStoredProducts(RequestStoredProductsMessage msg) {
             return copyFridgeProducts(msg, this.products);
+        }
+        private Behavior<FridgeMessage> onConsumeProduct(ConsumeProductMessage msg) {
+            Product product = msg.getProduct();
+            // TODO: remove product from products
+            // check if empty, if empty -> create order if possible
+            return Behaviors.same();
         }
 
         private Behavior<FridgeMessage> onAddProduct(AddProductMessage msg) {
