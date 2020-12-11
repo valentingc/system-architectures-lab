@@ -20,6 +20,18 @@ public class FridgeActor {
         return DefaultFridgeBehavior.create(new LinkedList<>());
     }
 
+    private static Behavior<FridgeMessage> copyFridgeProducts(
+        RequestStoredProductsMessage msg,
+        List<Product> products
+    ) {
+        List<Product> productsCopy = new LinkedList<>();
+        for (Product p : products) {
+            productsCopy.add(new Product(p.name, p.weight, p.price));
+        }
+        msg.replyTo.tell(new ResponseStoredProductsMessage(productsCopy));
+        return Behaviors.same();
+    }
+
     public static final class Product {
         public final String name;
         public final float weight;
@@ -35,14 +47,14 @@ public class FridgeActor {
     public static final class FullFridgeBehavior extends AbstractBehavior<FridgeMessage> {
         private List<Product> products;
 
-        public static Behavior<FridgeMessage> create(List<Product> products) {
-            return Behaviors.setup(ctx -> new FullFridgeBehavior(ctx, products));
-        }
-
         public FullFridgeBehavior(ActorContext<FridgeMessage> context, List<Product> products) {
             super(context);
             this.products = new LinkedList<>(products);
             getContext().getLog().info("Switching Fridge Behavior: Full");
+        }
+
+        public static Behavior<FridgeMessage> create(List<Product> products) {
+            return Behaviors.setup(ctx -> new FullFridgeBehavior(ctx, products));
         }
 
         @Override
@@ -53,23 +65,21 @@ public class FridgeActor {
         }
 
         private Behavior<FridgeMessage> getStoredProducts(RequestStoredProductsMessage msg) {
-            // TODO: answer with real products here
-            msg.replyTo.tell(new ResponseStoredProductsMessage(new LinkedList<>()));
-            return Behaviors.same();
+            return copyFridgeProducts(msg, this.products);
         }
     }
 
     public static final class DefaultFridgeBehavior extends AbstractBehavior<FridgeMessage> {
         private List<Product> products;
 
-        public static Behavior<FridgeMessage> create(List<Product> products) {
-            return Behaviors.setup(ctx -> new DefaultFridgeBehavior(ctx, products));
-        }
-
         private DefaultFridgeBehavior(ActorContext<FridgeMessage> context, List<Product> products) {
             super(context);
             this.products = new LinkedList<>(products);
             getContext().getLog().info("Switching Fridge Behavior: Default");
+        }
+
+        public static Behavior<FridgeMessage> create(List<Product> products) {
+            return Behaviors.setup(ctx -> new DefaultFridgeBehavior(ctx, products));
         }
 
         @Override
@@ -81,9 +91,7 @@ public class FridgeActor {
         }
 
         private Behavior<FridgeMessage> getStoredProducts(RequestStoredProductsMessage msg) {
-            // TODO: answer with real products here
-            msg.replyTo.tell(new ResponseStoredProductsMessage(new LinkedList<>()));
-            return Behaviors.same();
+            return copyFridgeProducts(msg, this.products);
         }
 
         private Behavior<FridgeMessage> onAddProduct(AddProductMessage msg) {
