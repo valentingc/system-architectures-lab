@@ -101,6 +101,18 @@ public class FridgeActor {
             Product product = msg.getProduct();
             // TODO: remove product from products
             // check if empty, if empty -> create order if possible
+            float amountLeft = 0;
+            for (Product p : products) {
+                if (p.name.equals(product.name)) {
+                    amountLeft += 1;
+                }
+            }
+            if (amountLeft < 1.0f) {
+                getContext().getLog().info(
+                    "Product {} is running out. Need to re-order",
+                    product.name
+                );
+            }
             return Behaviors.same();
         }
 
