@@ -11,4 +11,7 @@ public class ResponseStoredProductsMessage implements FridgeMessage {
         this.products = products;
     }
 
+    public List<FridgeActor.Product> getProducts() {
+        return products;
+    }
 }
