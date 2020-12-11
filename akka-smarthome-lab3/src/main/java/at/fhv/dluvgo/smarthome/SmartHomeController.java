@@ -8,6 +8,9 @@ import akka.actor.typed.javadsl.Behaviors;
 import at.fhv.dluvgo.smarthome.actuators.ac.AirConditioningActor;
 import at.fhv.dluvgo.smarthome.actuators.ac.message.TemperatureChangedMessage;
 import at.fhv.dluvgo.smarthome.actuators.blinds.BlindsActor;
+import at.fhv.dluvgo.smarthome.actuators.fridge.FridgeActor;
+import at.fhv.dluvgo.smarthome.actuators.fridge.message.AddProductMessage;
+import at.fhv.dluvgo.smarthome.actuators.fridge.message.FridgeMessage;
 import at.fhv.dluvgo.smarthome.actuators.mediastation.MediaStationActor;
 import at.fhv.dluvgo.smarthome.actuators.mediastation.message.MediaPlaybackRequestMessage;
 import at.fhv.dluvgo.smarthome.environment.EnvironmentActor;
@@ -77,6 +80,17 @@ public class SmartHomeController {
                 // Init environment
                 environment.tell(new InitEnvironmentMessage());
                 mediaStation.tell(new MediaPlaybackRequestMessage("test"));
+
+                ActorRef<FridgeMessage> fridge = context.spawn(
+                    FridgeActor.create(),
+                    "fridge"
+                );
+
+
+                FridgeActor.Product p = new FridgeActor.Product(
+                    "Demoproduct",1,1
+                );
+                fridge.tell(new AddProductMessage(p));
 
                 // Stop on termination
                 return Behaviors.receive(Void.class)
