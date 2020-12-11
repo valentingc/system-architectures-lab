@@ -7,6 +7,7 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.AddProductMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.FridgeMessage;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -31,13 +32,15 @@ public class FridgeActor {
     }
 
     public static final class FullFridgeBehavior extends AbstractBehavior<FridgeMessage> {
+        private List<Product> products;
 
-        public static Behavior<FridgeMessage> create() {
-            return Behaviors.setup(ctx -> new FullFridgeBehavior(ctx));
+        public static Behavior<FridgeMessage> create(List<Product> products) {
+            return Behaviors.setup(ctx -> new FullFridgeBehavior(ctx, products));
         }
 
-        public FullFridgeBehavior(ActorContext<FridgeMessage> context) {
+        public FullFridgeBehavior(ActorContext<FridgeMessage> context, List<Product> products) {
             super(context);
+            this.products = new LinkedList<>(products);
             getContext().getLog().info("Switching Fridge Behavior: Full");
         }
 
@@ -50,7 +53,7 @@ public class FridgeActor {
     }
 
     public static final class DefaultFridgeBehavior extends AbstractBehavior<FridgeMessage> {
-        private final List<Product> products = new LinkedList<>();
+        private List<Product> products;
 
         public static Behavior<FridgeMessage> create(List<Product> products) {
             return Behaviors.setup(ctx -> new DefaultFridgeBehavior(ctx, products));
@@ -58,7 +61,7 @@ public class FridgeActor {
 
         private DefaultFridgeBehavior(ActorContext<FridgeMessage> context, List<Product> products) {
             super(context);
-            this.products.addAll(products);
+            this.products = new LinkedList<>(products);
             getContext().getLog().info("Switching Fridge Behavior: Default");
         }
 
@@ -74,10 +77,10 @@ public class FridgeActor {
 
             if ((products.size() + 1) > MAX_ITEMS) {
                 // TODO - max items reached
-                return FullFridgeBehavior.create();
+                return FullFridgeBehavior.create(products);
             } else if ((calculateTotalWeight() + product.weight) > MAX_WEIGHT) {
                 // TODO - max weight reached
-                return FullFridgeBehavior.create();
+                return FullFridgeBehavior.create(products);
             }
 
             products.add(product);
