@@ -91,7 +91,7 @@ public class SmartHomeController {
                     "Demoproduct",1,1
                 );
                 fridge.tell(new AddProductMessage(p));
-
+                fridge.tell(new AddProductMessage(p));
                 // Stop on termination
                 return Behaviors.receive(Void.class)
                     .onSignal(Terminated.class, sig -> Behaviors.stopped())

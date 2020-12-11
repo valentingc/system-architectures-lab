@@ -77,9 +77,11 @@ public class FridgeActor {
 
             if ((products.size() + 1) > MAX_ITEMS) {
                 // TODO - max items reached
+                getContext().getLog().info("Fridge is now full (max_items)");
                 return FullFridgeBehavior.create(products);
             } else if ((calculateTotalWeight() + product.weight) > MAX_WEIGHT) {
                 // TODO - max weight reached
+                getContext().getLog().info("Fridge is now full (max_weight)");
                 return FullFridgeBehavior.create(products);
             }
 
