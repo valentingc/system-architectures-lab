@@ -7,7 +7,8 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.AddProductMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.FridgeMessage;
-import java.util.Collections;
+import at.fhv.dluvgo.smarthome.actuators.fridge.message.RequestStoredProductsMessage;
+import at.fhv.dluvgo.smarthome.actuators.fridge.message.ResponseStoredProductsMessage;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -47,8 +48,14 @@ public class FridgeActor {
         @Override
         public Receive<FridgeMessage> createReceive() {
             return newReceiveBuilder()
+                .onMessage(RequestStoredProductsMessage.class, this::getStoredProducts)
                 .build();
-                // todo: add some supported messages
+        }
+
+        private Behavior<FridgeMessage> getStoredProducts(RequestStoredProductsMessage msg) {
+            // TODO: answer with real products here
+            msg.replyTo.tell(new ResponseStoredProductsMessage(new LinkedList<>()));
+            return Behaviors.same();
         }
     }
 
@@ -69,7 +76,14 @@ public class FridgeActor {
         public Receive<FridgeMessage> createReceive() {
             return newReceiveBuilder()
                 .onMessage(AddProductMessage.class, this::onAddProduct)
+                .onMessage(RequestStoredProductsMessage.class, this::getStoredProducts)
                 .build();
+        }
+
+        private Behavior<FridgeMessage> getStoredProducts(RequestStoredProductsMessage msg) {
+            // TODO: answer with real products here
+            msg.replyTo.tell(new ResponseStoredProductsMessage(new LinkedList<>()));
+            return Behaviors.same();
         }
 
         private Behavior<FridgeMessage> onAddProduct(AddProductMessage msg) {
