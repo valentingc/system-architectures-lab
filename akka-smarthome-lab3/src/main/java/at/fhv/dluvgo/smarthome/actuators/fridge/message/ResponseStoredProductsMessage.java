@@ -1,10 +1,10 @@
 package at.fhv.dluvgo.smarthome.actuators.fridge.message;
 
-import akka.actor.typed.ActorRef;
+import at.fhv.dluvgo.smarthome.Message;
 import at.fhv.dluvgo.smarthome.actuators.fridge.FridgeActor;
 import java.util.List;
 
-public class ResponseStoredProductsMessage implements FridgeMessage {
+public class ResponseStoredProductsMessage implements Message {
     public final List<FridgeActor.Product> products;
 
     public ResponseStoredProductsMessage(List<FridgeActor.Product> products) {

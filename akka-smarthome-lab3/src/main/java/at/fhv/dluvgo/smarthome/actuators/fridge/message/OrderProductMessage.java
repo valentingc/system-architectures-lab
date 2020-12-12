@@ -3,22 +3,30 @@ package at.fhv.dluvgo.smarthome.actuators.fridge.message;
 import akka.actor.typed.ActorRef;
 import at.fhv.dluvgo.smarthome.Message;
 import at.fhv.dluvgo.smarthome.actuators.fridge.FridgeActor;
+import java.util.List;
 
-public class OrderProductMessage implements FridgeMessage {
-    private final FridgeActor.Product product;
-    private final ActorRef<FridgeMessage> replyTo;
+public class OrderProductMessage implements Message {
+    private final FridgeActor.Product productToOrder;
+    private final ActorRef<Message> replyTo;
+    private final List<FridgeActor.Product> currentProducts;
 
-    public OrderProductMessage(FridgeActor.Product product, ActorRef<FridgeMessage> replyTo) {
-        this.product = product;
+    public OrderProductMessage(FridgeActor.Product product, ActorRef<Message> replyTo,
+                               List<FridgeActor.Product> currentProducts) {
+        this.productToOrder = product;
         this.replyTo = replyTo;
+        this.currentProducts = currentProducts;
     }
 
-    public FridgeActor.Product getProduct() {
-        return product;
+    public FridgeActor.Product getProductToOrder() {
+        return productToOrder;
     }
 
-    public ActorRef<FridgeMessage> getReplyTo() {
+    public ActorRef<Message> getReplyTo() {
         return replyTo;
+    }
+
+    public List<FridgeActor.Product> getCurrentProducts() {
+        return currentProducts;
     }
 }
 

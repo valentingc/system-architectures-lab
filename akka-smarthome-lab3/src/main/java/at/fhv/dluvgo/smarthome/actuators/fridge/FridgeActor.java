@@ -6,8 +6,8 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
+import at.fhv.dluvgo.smarthome.Message;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.ConsumeProductMessage;
-import at.fhv.dluvgo.smarthome.actuators.fridge.message.FridgeMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.OrderProductMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.ProductOrderedSuccessfullyMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.RequestStoredProductsMessage;
@@ -20,20 +20,16 @@ public class FridgeActor {
     private static final float MAX_WEIGHT = 20.00f; // Weight measured in kg
     private static final int MAX_ITEMS = 20;
 
-    public static Behavior<FridgeMessage> create() {
+    public static Behavior<Message> create() {
         return DefaultFridgeBehavior.create(new LinkedList<>());
     }
 
-    private static Behavior<FridgeMessage> copyFridgeProducts(
-        RequestStoredProductsMessage msg,
-        List<Product> products
-    ) {
+    private static List<Product> copyFridgeProducts(List<Product> products) {
         List<Product> productsCopy = new LinkedList<>();
         for (Product p : products) {
             productsCopy.add(new Product(p.name, p.weight, p.price));
         }
-        msg.replyTo.tell(new ResponseStoredProductsMessage(productsCopy));
-        return Behaviors.same();
+        return productsCopy;
     }
 
     public static final class Product {
@@ -65,48 +61,57 @@ public class FridgeActor {
         }
     }
 
-    public static final class FullFridgeBehavior extends AbstractBehavior<FridgeMessage> {
+    public static final class FullFridgeBehavior extends AbstractBehavior<Message> {
         // TODO: change this to a map, because one product can be added multiple times
         // so we need a mapping between product <-> amount
-        private List<Product> products;
+        private final List<Product> products;
 
-        public FullFridgeBehavior(ActorContext<FridgeMessage> context, List<Product> products) {
+        public FullFridgeBehavior(ActorContext<Message> context, List<Product> products) {
             super(context);
             this.products = new LinkedList<>(products);
             getContext().getLog().info("Switching Fridge Behavior: Full");
         }
 
-        public static Behavior<FridgeMessage> create(List<Product> products) {
+        public static Behavior<Message> create(List<Product> products) {
             return Behaviors.setup(ctx -> new FullFridgeBehavior(ctx, products));
         }
 
         @Override
-        public Receive<FridgeMessage> createReceive() {
+        public Receive<Message> createReceive() {
             return newReceiveBuilder()
                 .onMessage(RequestStoredProductsMessage.class, this::getStoredProducts)
                 .build();
         }
 
-        private Behavior<FridgeMessage> getStoredProducts(RequestStoredProductsMessage msg) {
-            return copyFridgeProducts(msg, this.products);
+        private Behavior<Message> getStoredProducts(RequestStoredProductsMessage msg) {
+            List<Product> productsCopy = copyFridgeProducts(this.products);
+            msg.replyTo.tell(new ResponseStoredProductsMessage(productsCopy));
+            return Behaviors.same();
         }
     }
 
-    public static final class DefaultFridgeBehavior extends AbstractBehavior<FridgeMessage> {
-        private List<Product> products;
+    public static final class DefaultFridgeBehavior extends AbstractBehavior<Message> {
+        private final List<Product> products;
+        private final ActorRef<Message> orderProcessor;
 
-        private DefaultFridgeBehavior(ActorContext<FridgeMessage> context, List<Product> products) {
+        private DefaultFridgeBehavior(ActorContext<Message> context, List<Product> products) {
             super(context);
             this.products = new LinkedList<>(products);
+
+            // TODO: immutable products!
+             orderProcessor = getContext().spawn(
+                OrderProcessorActor.create(getContext().getSelf(), MAX_WEIGHT, MAX_ITEMS),
+                "order-processor"
+            );
             getContext().getLog().info("Switching Fridge Behavior: Default");
         }
 
-        public static Behavior<FridgeMessage> create(List<Product> products) {
+        public static Behavior<Message> create(List<Product> products) {
             return Behaviors.setup(ctx -> new DefaultFridgeBehavior(ctx, products));
         }
 
         @Override
-        public Receive<FridgeMessage> createReceive() {
+        public Receive<Message> createReceive() {
             return newReceiveBuilder()
                 .onMessage(RequestStoredProductsMessage.class, this::onGetStoredProducts)
                 .onMessage(ConsumeProductMessage.class, this::onConsumeProduct)
@@ -118,11 +123,13 @@ public class FridgeActor {
                 .build();
         }
 
-        private Behavior<FridgeMessage> onGetStoredProducts(RequestStoredProductsMessage msg) {
-            return copyFridgeProducts(msg, this.products);
+        private Behavior<Message> onGetStoredProducts(RequestStoredProductsMessage msg) {
+            List<Product> productsCopy = copyFridgeProducts(this.products);
+            msg.replyTo.tell(new ResponseStoredProductsMessage(productsCopy));
+            return Behaviors.same();
         }
 
-        private Behavior<FridgeMessage> onProductOrderedSuccessfully(
+        private Behavior<Message> onProductOrderedSuccessfully(
             ProductOrderedSuccessfullyMessage msg
         ) {
             getContext().getLog().info("Product was ordered and restocked: {}",
@@ -131,21 +138,19 @@ public class FridgeActor {
             return Behaviors.same();
         }
 
-        private Behavior<FridgeMessage> onOrderProduct(OrderProductMessage msg) {
-            Product product = msg.getProduct();
+        private Behavior<Message> onOrderProduct(OrderProductMessage msg) {
+            Product product = msg.getProductToOrder();
 
+            List<Product> productsCopy = copyFridgeProducts(this.products);
 
-            // TODO: immutable products!
-            ActorRef<FridgeMessage> orderProcessor = getContext().spawn(
-                OrderProcessorActor.create(getContext().getSelf(), products, MAX_WEIGHT, MAX_ITEMS),
-                "order-processor"
+            orderProcessor.tell(
+                new OrderProductMessage(product, getContext().getSelf(), productsCopy)
             );
-            orderProcessor.tell(new OrderProductMessage(msg.getProduct(), getContext().getSelf()));
             return Behaviors.same();
 
         }
 
-        private Behavior<FridgeMessage> onConsumeProduct(ConsumeProductMessage msg) {
+        private Behavior<Message> onConsumeProduct(ConsumeProductMessage msg) {
             Product product = msg.getProduct();
 
             // calculate how many products of this type are left
