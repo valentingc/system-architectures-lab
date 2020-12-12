@@ -20,8 +20,8 @@ public class OrderProcessorActor extends AbstractBehavior<Message> {
     private final int MAX_ITEMS;
 
     public static final class OrderReceipt {
-        private LocalDateTime orderDate;
-        private List<FridgeActor.Product> productsOrdered;
+        private final LocalDateTime orderDate;
+        private final List<FridgeActor.Product> productsOrdered;
         private double orderSum;
 
         public OrderReceipt(List<FridgeActor.Product> productsOrdered) {
@@ -37,6 +37,11 @@ public class OrderProcessorActor extends AbstractBehavior<Message> {
             }
             this.orderSum = orderSum;
         }
+
+        @Override
+        public String toString() {
+            return "Order date: " + orderDate + "; Number of products: #" + productsOrdered.size() + "; Sum: " + orderSum + "€";
+        }
     }
 
     public OrderProcessorActor(
@@ -47,7 +52,6 @@ public class OrderProcessorActor extends AbstractBehavior<Message> {
     ) {
         super(context);
         this.replyTo = replyTo;
-        ;
         this.MAX_WEIGHT = maxWeight;
         this.MAX_ITEMS = maxItems;
     }
@@ -88,8 +92,6 @@ public class OrderProcessorActor extends AbstractBehavior<Message> {
         getContext().getLog().info("Ordering Product: {}", msg.getProductToOrder().name);
 
         if ((products.size() + 1) > MAX_ITEMS) {
-            // TODO - max items reached
-            // TODO: return error msg
             getContext().getLog().info("Fridge is now full (max_items)");
             msg.getReplyTo().tell(
                 new ProductOrderedUnsuccessfullyMessage(
@@ -99,7 +101,6 @@ public class OrderProcessorActor extends AbstractBehavior<Message> {
             );
             return Behaviors.same();
         } else if ((calculateTotalWeight(products) + product.weight) > MAX_WEIGHT) {
-            // TODO - max weight reached
             getContext().getLog().info("Fridge is now full (max_weight)");
             msg.getReplyTo().tell(
                 new ProductOrderedUnsuccessfullyMessage(

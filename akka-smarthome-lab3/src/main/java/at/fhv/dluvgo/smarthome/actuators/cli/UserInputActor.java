@@ -8,10 +8,14 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import at.fhv.dluvgo.smarthome.Message;
 import at.fhv.dluvgo.smarthome.actuators.fridge.FridgeActor;
+import at.fhv.dluvgo.smarthome.actuators.fridge.OrderProcessorActor;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.ConsumeProductMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.OrderProductMessage;
+import at.fhv.dluvgo.smarthome.actuators.fridge.message.ProductOrderedSuccessfullyMessage;
+import at.fhv.dluvgo.smarthome.actuators.fridge.message.ProductOrderedUnsuccessfullyMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.RequestOrderHistoryMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.RequestStoredProductsMessage;
+import at.fhv.dluvgo.smarthome.actuators.fridge.message.ResponseOrderHistoryMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.ResponseStoredProductsMessage;
 import at.fhv.dluvgo.smarthome.actuators.mediastation.message.MediaPlaybackRequestMessage;
 import at.fhv.dluvgo.smarthome.actuators.mediastation.message.StopMediaPlaybackRequestMessage;
@@ -21,6 +25,7 @@ import java.io.InputStreamReader;
 
 public class UserInputActor extends AbstractBehavior<Message> {
     private enum MenuState {
+        QUIT,
         MAIN_MENU,
         MOVIE_SUBMENU,
         FRIDGE_SUBMENU,
@@ -54,6 +59,9 @@ public class UserInputActor extends AbstractBehavior<Message> {
     public Receive<Message> createReceive() {
         return newReceiveBuilder()
             .onMessage(ResponseStoredProductsMessage.class, this::onStoredProductsResponse)
+            .onMessage(ProductOrderedSuccessfullyMessage.class, this::onProductOrderedSuccessfully)
+            .onMessage(ProductOrderedUnsuccessfullyMessage.class, this::onProductOrderedUnsuccessfully)
+            .onMessage(ResponseOrderHistoryMessage.class, this::onOrderHistory)
             .build();
     }
 
@@ -64,6 +72,28 @@ public class UserInputActor extends AbstractBehavior<Message> {
             getContext().getLog().info("Fridge contains: {}", p.name);
         }
 
+        return Behaviors.same();
+    }
+
+    private Behavior<Message> onProductOrderedSuccessfully(ProductOrderedSuccessfullyMessage msg) {
+        getContext().getLog().info("Successfully ordered product [{}]", msg.getProduct().name);
+        return Behaviors.same();
+    }
+
+    private Behavior<Message> onProductOrderedUnsuccessfully(ProductOrderedUnsuccessfullyMessage msg) {
+        getContext().getLog().info(
+            "Could not order product [{}] because [{}]",
+            msg.getProduct().name,
+            msg.getReason()
+        );
+        return Behaviors.same();
+    }
+
+    private Behavior<Message> onOrderHistory(ResponseOrderHistoryMessage msg) {
+        int i = 0;
+        for (OrderProcessorActor.OrderReceipt receipt : msg.getOrderHistory()) {
+            getContext().getLog().info("Order history #" + i++ + ": [" + receipt + "]");
+        }
         return Behaviors.same();
     }
 
@@ -102,6 +132,7 @@ public class UserInputActor extends AbstractBehavior<Message> {
                     case "0":
                     case "quit":
                         running = false;
+                        state = MenuState.QUIT;
                         break;
                     default:
                         System.err.println("Unknown command");
@@ -181,7 +212,6 @@ public class UserInputActor extends AbstractBehavior<Message> {
                 } else {
                     System.out.println("Please choose one product to order..");
                 }
-
                 System.out.println("1) Milk (1kg, 1,50€)");
                 System.out.println("2) Butter (0.25kg, 0.99€)");
                 System.out.println("3) Yoghurt (0.20kg, 0.79€)");

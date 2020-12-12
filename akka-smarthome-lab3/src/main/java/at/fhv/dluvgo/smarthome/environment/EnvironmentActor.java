@@ -90,7 +90,7 @@ public class EnvironmentActor extends AbstractBehavior<Message> {
         weatherTimer.startTimerAtFixedRate(
             WEATHER_TIMER_KEY,
             new WeatherChangeRequestMessage(),
-            Duration.ofSeconds(5) // TODO - Find best value
+            Duration.ofSeconds(25) // TODO - Find best value
         );
 
         return this;
