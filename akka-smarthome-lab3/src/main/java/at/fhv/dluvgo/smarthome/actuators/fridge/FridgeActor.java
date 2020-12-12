@@ -62,8 +62,6 @@ public class FridgeActor {
     }
 
     public static final class FullFridgeBehavior extends AbstractBehavior<Message> {
-        // TODO: change this to a map, because one product can be added multiple times
-        // so we need a mapping between product <-> amount
         private final List<Product> products;
 
         public FullFridgeBehavior(ActorContext<Message> context, List<Product> products) {
@@ -98,7 +96,6 @@ public class FridgeActor {
             super(context);
             this.products = new LinkedList<>(products);
 
-            // TODO: immutable products!
              orderProcessor = getContext().spawn(
                 OrderProcessorActor.create(getContext().getSelf(), MAX_WEIGHT, MAX_ITEMS),
                 "order-processor"
