@@ -1,13 +1,17 @@
 package at.fhv.dluvgo.smarthome.actuators.fridge;
 
+import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
+import at.fhv.dluvgo.smarthome.Message;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.AddProductMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.ConsumeProductMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.FridgeMessage;
+import at.fhv.dluvgo.smarthome.actuators.fridge.message.OrderProductMessage;
+import at.fhv.dluvgo.smarthome.actuators.fridge.message.ProductOrderedSuccessfullyMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.RequestStoredProductsMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.ResponseStoredProductsMessage;
 import java.util.LinkedList;
@@ -109,12 +113,35 @@ public class FridgeActor {
                 .onMessage(AddProductMessage.class, this::onAddProduct)
                 .onMessage(RequestStoredProductsMessage.class, this::onGetStoredProducts)
                 .onMessage(ConsumeProductMessage.class, this::onConsumeProduct)
+                .onMessage(OrderProductMessage.class, this::onOrderProduct)
+                .onMessage(
+                    ProductOrderedSuccessfullyMessage.class,
+                    this::onProductOrderedSuccessfully
+                )
                 .build();
         }
 
         private Behavior<FridgeMessage> onGetStoredProducts(RequestStoredProductsMessage msg) {
             return copyFridgeProducts(msg, this.products);
         }
+
+        private Behavior<FridgeMessage> onProductOrderedSuccessfully(
+            ProductOrderedSuccessfullyMessage msg
+        ) {
+            getContext().getLog().info("Product was ordered: {}", msg.getProduct().name);
+            return Behaviors.same();
+        }
+
+        private Behavior<FridgeMessage> onOrderProduct(OrderProductMessage msg) {
+            ActorRef<Message> orderProcessor = getContext().spawn(
+                OrderProcessorActor.create(getContext().getSelf()),
+                "order-processor"
+            );
+            orderProcessor.tell(new OrderProductMessage(msg.getProduct(), getContext().getSelf()));
+            return Behaviors.same();
+
+        }
+
         private Behavior<FridgeMessage> onConsumeProduct(ConsumeProductMessage msg) {
             Product product = msg.getProduct();
 
