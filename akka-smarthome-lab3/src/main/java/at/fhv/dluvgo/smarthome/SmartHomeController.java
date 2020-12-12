@@ -10,8 +10,8 @@ import at.fhv.dluvgo.smarthome.actuators.ac.message.TemperatureChangedMessage;
 import at.fhv.dluvgo.smarthome.actuators.blinds.BlindsActor;
 import at.fhv.dluvgo.smarthome.actuators.cli.UserInputActor;
 import at.fhv.dluvgo.smarthome.actuators.fridge.FridgeActor;
-import at.fhv.dluvgo.smarthome.actuators.fridge.message.AddProductMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.FridgeMessage;
+import at.fhv.dluvgo.smarthome.actuators.fridge.message.OrderProductMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.RequestStoredProductsMessage;
 import at.fhv.dluvgo.smarthome.actuators.mediastation.MediaStationActor;
 import at.fhv.dluvgo.smarthome.actuators.mediastation.message.MediaPlaybackRequestMessage;
@@ -91,14 +91,17 @@ public class SmartHomeController {
                 FridgeActor.Product p = new FridgeActor.Product(
                     "Demoproduct",1,1
                 );
-                fridge.tell(new AddProductMessage(p));
-                fridge.tell(new AddProductMessage(p));
 
                 ActorRef<Message> cli = context.spawn(
                     UserInputActor.create(),
                     "cli"
                 );
                 fridge.tell(new RequestStoredProductsMessage(cli));
+                // TODO: fix this.
+                
+                //fridge.tell(new OrderProductMessage(p, cli));
+                //fridge.tell(new OrderProductMessage(p, cli));
+
 
                 // Stop on termination
                 return Behaviors.receive(Void.class)

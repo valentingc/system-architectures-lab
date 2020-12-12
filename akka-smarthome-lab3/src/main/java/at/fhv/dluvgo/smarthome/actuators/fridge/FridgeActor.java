@@ -6,8 +6,6 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
-import at.fhv.dluvgo.smarthome.Message;
-import at.fhv.dluvgo.smarthome.actuators.fridge.message.AddProductMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.ConsumeProductMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.FridgeMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.OrderProductMessage;
@@ -110,7 +108,6 @@ public class FridgeActor {
         @Override
         public Receive<FridgeMessage> createReceive() {
             return newReceiveBuilder()
-                //.onMessage(AddProductMessage.class, this::onAddProduct)
                 .onMessage(RequestStoredProductsMessage.class, this::onGetStoredProducts)
                 .onMessage(ConsumeProductMessage.class, this::onConsumeProduct)
                 .onMessage(OrderProductMessage.class, this::onOrderProduct)
@@ -169,24 +166,6 @@ public class FridgeActor {
             }
             return Behaviors.same();
         }
-
-//        private Behavior<FridgeMessage> onAddProduct(AddProductMessage msg) {
-//            Product product = msg.getProduct();
-//
-//            if ((products.size() + 1) > MAX_ITEMS) {
-//                // TODO - max items reached
-//                getContext().getLog().info("Fridge is now full (max_items)");
-//                return FullFridgeBehavior.create(products);
-//            } else if ((calculateTotalWeight() + product.weight) > MAX_WEIGHT) {
-//                // TODO - max weight reached
-//                getContext().getLog().info("Fridge is now full (max_weight)");
-//                return FullFridgeBehavior.create(products);
-//            }
-//
-//            products.add(product);
-//            return Behaviors.same();
-//        }
-
 
     }
 }
