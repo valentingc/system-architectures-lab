@@ -117,8 +117,8 @@ public class FridgeActor {
         }
         private Behavior<FridgeMessage> onConsumeProduct(ConsumeProductMessage msg) {
             Product product = msg.getProduct();
-            // TODO: remove product from products
-            // check if empty, if empty -> create order if possible
+
+            // calculate how many products of this type are left
             float amountLeft = 0;
             for (Product p : products) {
                 if (p.name.equals(product.name)) {
@@ -126,6 +126,8 @@ public class FridgeActor {
                 }
             }
             products.remove(product);
+
+            // re-order if now empty
             if (amountLeft < 1.0f) {
                 getContext().getLog().info(
                     "Product {} is running out. Need to re-order",
