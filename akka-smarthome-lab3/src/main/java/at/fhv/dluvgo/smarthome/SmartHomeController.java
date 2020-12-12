@@ -100,8 +100,10 @@ public class SmartHomeController {
                 // TODO: fix this; separate into multiple messages so we don't need null
                 fridge.tell(new OrderProductMessage(p, cli, null));
                 fridge.tell(new OrderProductMessage(p, cli, null));
-
-
+                fridge.tell(new OrderProductMessage(p, cli, null));
+                fridge.tell(new OrderProductMessage(p, cli, null));
+                fridge.tell(new OrderProductMessage(p, cli, null));
+                fridge.tell(new OrderProductMessage(p, cli, null));
                 // Stop on termination
                 return Behaviors.receive(Void.class)
                     .onSignal(Terminated.class, sig -> Behaviors.stopped())
