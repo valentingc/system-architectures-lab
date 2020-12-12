@@ -110,7 +110,7 @@ public class FridgeActor {
         @Override
         public Receive<FridgeMessage> createReceive() {
             return newReceiveBuilder()
-                .onMessage(AddProductMessage.class, this::onAddProduct)
+                //.onMessage(AddProductMessage.class, this::onAddProduct)
                 .onMessage(RequestStoredProductsMessage.class, this::onGetStoredProducts)
                 .onMessage(ConsumeProductMessage.class, this::onConsumeProduct)
                 .onMessage(OrderProductMessage.class, this::onOrderProduct)
@@ -128,13 +128,19 @@ public class FridgeActor {
         private Behavior<FridgeMessage> onProductOrderedSuccessfully(
             ProductOrderedSuccessfullyMessage msg
         ) {
-            getContext().getLog().info("Product was ordered: {}", msg.getProduct().name);
+            getContext().getLog().info("Product was ordered and restocked: {}",
+                msg.getProduct().name);
+            products.add(msg.getProduct());
             return Behaviors.same();
         }
 
         private Behavior<FridgeMessage> onOrderProduct(OrderProductMessage msg) {
-            ActorRef<Message> orderProcessor = getContext().spawn(
-                OrderProcessorActor.create(getContext().getSelf()),
+            Product product = msg.getProduct();
+
+
+            // TODO: immutable products!
+            ActorRef<FridgeMessage> orderProcessor = getContext().spawn(
+                OrderProcessorActor.create(getContext().getSelf(), products, MAX_WEIGHT, MAX_ITEMS),
                 "order-processor"
             );
             orderProcessor.tell(new OrderProductMessage(msg.getProduct(), getContext().getSelf()));
@@ -164,30 +170,23 @@ public class FridgeActor {
             return Behaviors.same();
         }
 
-        private Behavior<FridgeMessage> onAddProduct(AddProductMessage msg) {
-            Product product = msg.getProduct();
+//        private Behavior<FridgeMessage> onAddProduct(AddProductMessage msg) {
+//            Product product = msg.getProduct();
+//
+//            if ((products.size() + 1) > MAX_ITEMS) {
+//                // TODO - max items reached
+//                getContext().getLog().info("Fridge is now full (max_items)");
+//                return FullFridgeBehavior.create(products);
+//            } else if ((calculateTotalWeight() + product.weight) > MAX_WEIGHT) {
+//                // TODO - max weight reached
+//                getContext().getLog().info("Fridge is now full (max_weight)");
+//                return FullFridgeBehavior.create(products);
+//            }
+//
+//            products.add(product);
+//            return Behaviors.same();
+//        }
 
-            if ((products.size() + 1) > MAX_ITEMS) {
-                // TODO - max items reached
-                getContext().getLog().info("Fridge is now full (max_items)");
-                return FullFridgeBehavior.create(products);
-            } else if ((calculateTotalWeight() + product.weight) > MAX_WEIGHT) {
-                // TODO - max weight reached
-                getContext().getLog().info("Fridge is now full (max_weight)");
-                return FullFridgeBehavior.create(products);
-            }
 
-            products.add(product);
-            return Behaviors.same();
-        }
-
-        private float calculateTotalWeight() {
-            float weight = 0.0f;
-            for (Product product : products) {
-                weight += product.weight;
-            }
-
-            return weight;
-        }
     }
 }
