@@ -18,7 +18,7 @@ import java.util.Objects;
 
 public class FridgeActor {
     private static final float MAX_WEIGHT = 20.00f; // Weight measured in kg
-    private static final int MAX_ITEMS = 20;
+    private static final int MAX_ITEMS = 5;
 
     public static Behavior<Message> create() {
         return DefaultFridgeBehavior.create(new LinkedList<>());
@@ -129,9 +129,13 @@ public class FridgeActor {
         private Behavior<Message> onProductOrderedSuccessfully(
             ProductOrderedSuccessfullyMessage msg
         ) {
-            getContext().getLog().info("Product was ordered and restocked: {}",
-                msg.getProduct().name);
-            products.add(msg.getProduct());
+            this.products.add(msg.getProduct());
+            getContext().getLog().info("Product was ordered and restocked: {}, New Fridge Amount: "
+                    + "{}/{}",
+                msg.getProduct().name,
+                this.products.size(),
+                MAX_ITEMS
+                );
             return Behaviors.same();
         }
 
