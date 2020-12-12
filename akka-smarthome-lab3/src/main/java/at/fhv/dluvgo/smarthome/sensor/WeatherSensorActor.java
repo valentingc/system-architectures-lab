@@ -8,6 +8,7 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import at.fhv.dluvgo.smarthome.Message;
 import at.fhv.dluvgo.smarthome.actuators.ac.message.TemperatureChangedMessage;
+import at.fhv.dluvgo.smarthome.actuators.blinds.BlindsActor;
 import at.fhv.dluvgo.smarthome.actuators.blinds.message.WeatherChangedMessage;
 import at.fhv.dluvgo.smarthome.common.WeatherType;
 import at.fhv.dluvgo.smarthome.sensor.message.EnvWeatherChangedMessage;
@@ -37,7 +38,14 @@ public class WeatherSensorActor extends AbstractBehavior<EnvWeatherChangedMessag
             .build();
     }
 
-    // TODO - JavaDoc once blinds and media station have been added
+    /**
+     * Handles changing environment weather ({@link EnvWeatherChangedMessage}) by
+     * notifying the {@link BlindsActor} about changed {@link WeatherType} conditions.
+     *
+     * @param msg The new environment weather
+     *
+     * @return this - no change of behavior
+     */
     private Behavior<EnvWeatherChangedMessage> onEnvWeatherChanged(EnvWeatherChangedMessage msg) {
         weather = WeatherType.values()[msg.getWeather()];
         getContext().getLog().debug("Received new weather value");

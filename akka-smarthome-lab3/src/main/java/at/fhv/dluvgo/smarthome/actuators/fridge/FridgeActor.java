@@ -20,6 +20,7 @@ import at.fhv.dluvgo.smarthome.actuators.fridge.sensor.ItemCountChangedMessage;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Random;
 
 public class FridgeActor {
     private static final float MAX_WEIGHT = 10.00f; // Weight measured in kg
@@ -33,7 +34,16 @@ public class FridgeActor {
         return new LinkedList<>(products);
     }
 
-    //private static
+    private static boolean isProductEmpty(List<Product> products, Product product) {
+        float amountLeft = 0;
+        for (Product p : products) {
+            if (p.name.equals(product.name)) {
+                amountLeft += 1;
+            }
+        }
+        return amountLeft < 1.0f;
+
+    }
 
     public enum Product {
         MILK("Milk", 1, 1.50f),
@@ -72,7 +82,8 @@ public class FridgeActor {
             List<Product> products,
             List<OrderProcessorActor.OrderReceipt> historicalOrders
         ) {
-            return Behaviors.setup(ctx -> new FullFridgeBehavior(ctx, products, historicalOrders));
+            return Behaviors.setup(
+                ctx -> new FullFridgeBehavior(ctx, products, historicalOrders));
         }
 
         @Override
@@ -81,14 +92,41 @@ public class FridgeActor {
                 .onMessage(RequestStoredProductsMessage.class, this::getStoredProducts)
                 .onMessage(ConsumeProductMessage.class, this::onConsumeProduct)
                 .onMessage(RequestOrderHistoryMessage.class, this::onRequestOrderHistory)
+                .onMessage(OrderProductMessage.class, this::onOrderProduct)
                 .build();
         }
 
         private Behavior<Message> getStoredProducts(RequestStoredProductsMessage msg) {
             List<Product> productsCopy = copyFridgeProducts(this.products);
             msg.replyTo.tell(new ResponseStoredProductsMessage(productsCopy));
-            return Behaviors.same();
+            return this;
         }
+
+        private Behavior<Message> onConsumeProduct(ConsumeProductMessage msg) {
+            if (!products.contains(msg.getProduct())) {
+                getContext().getLog().info("Product is not in fridge, are you kidding me?: {}",
+                    msg.getProduct().name);
+                return this;
+            }
+            return DefaultFridgeBehavior.switchFromFullConsumed(products, msg, historicalOrders);
+        }
+
+        private Behavior<Message> onRequestOrderHistory(RequestOrderHistoryMessage msg) {
+            getContext().getLog().info("Got a request for order history");
+
+            List<OrderProcessorActor.OrderReceipt> orderHistory =
+                new LinkedList<>(this.historicalOrders);
+            msg.getReplyTo().tell(new ResponseOrderHistoryMessage(orderHistory));
+
+            return this;
+        }
+
+        private Behavior<Message> onOrderProduct(OrderProductMessage msg) {
+            getContext().getLog()
+                .info("You should probably eat something first, your fridge is full! ;-)");
+            return this;
+        }
+
     }
 
     public static final class DefaultFridgeBehavior extends AbstractBehavior<Message> {
@@ -107,21 +145,28 @@ public class FridgeActor {
 
             orderProcessor = getContext().spawn(
                 OrderProcessorActor.create(getContext().getSelf(), MAX_WEIGHT, MAX_ITEMS),
-                "order-processor"
+                "order-processor-" + new Random().nextInt() // :shrug: :see_no_evil: :exploding_head:
             );
-            // TODO: remove that if not finished
-//            itemCountSensor = getContext().spawn(
-//                FridgeItemCountSensor.create(),
-//                "fridge-item-count-sensor"
-//            );
+
             getContext().getLog().info("Switching Fridge Behavior: Default");
         }
+
+        public static Behavior<Message> switchFromFullConsumed(
+            List<Product> products,
+            ConsumeProductMessage msg,
+            List<OrderProcessorActor.OrderReceipt> historicalOrders
+        ) {
+            return Behaviors
+                .setup(ctx -> new DefaultFridgeBehavior(ctx, products, historicalOrders).onConsumeProduct(msg));
+        }
+
 
         public static Behavior<Message> create(
             List<Product> products,
             List<OrderProcessorActor.OrderReceipt> historicalOrders
         ) {
-            return Behaviors.setup(ctx -> new DefaultFridgeBehavior(ctx, products, historicalOrders));
+            return Behaviors
+                .setup(ctx -> new DefaultFridgeBehavior(ctx, products, historicalOrders));
         }
 
         @Override
@@ -130,7 +175,8 @@ public class FridgeActor {
                 .onMessage(RequestStoredProductsMessage.class, this::onGetStoredProducts)
                 .onMessage(ConsumeProductMessage.class, this::onConsumeProduct)
                 .onMessage(OrderProductMessage.class, this::onOrderProduct)
-                .onMessage(ProductOrderedUnsuccessfullyMessage.class, this::onProductOrderedUnsuccessfully)
+                .onMessage(ProductOrderedUnsuccessfullyMessage.class,
+                    this::onProductOrderedUnsuccessfully)
                 .onMessage(
                     ProductOrderedSuccessfullyMessage.class,
                     this::onProductOrderedSuccessfully
@@ -142,16 +188,18 @@ public class FridgeActor {
         private Behavior<Message> onGetStoredProducts(RequestStoredProductsMessage msg) {
             List<Product> productsCopy = copyFridgeProducts(this.products);
             msg.replyTo.tell(new ResponseStoredProductsMessage(productsCopy));
-            return Behaviors.same();
+            return this;
         }
 
-        private Behavior<Message> onProductOrderedUnsuccessfully(ProductOrderedUnsuccessfullyMessage msg) {
+        private Behavior<Message> onProductOrderedUnsuccessfully(
+            ProductOrderedUnsuccessfullyMessage msg) {
             getContext().getLog().info(
                 "Could not order product: {}, Reason: {}",
                 msg.getProduct().name,
                 msg.getReason()
             );
-            return FridgeActor.FullFridgeBehavior.create(products, historicalOrders);
+            return FridgeActor.FullFridgeBehavior
+                .create(products, historicalOrders);
         }
 
         private Behavior<Message> onProductOrderedSuccessfully(
@@ -166,18 +214,17 @@ public class FridgeActor {
                 MAX_ITEMS
             );
 
-            // TODO: remove this if not finished
-            //this.itemCountSensor.tell(new ItemCountChangedMessage(this.products.size()));
-            return Behaviors.same();
+            return this;
         }
 
         private Behavior<Message> onRequestOrderHistory(RequestOrderHistoryMessage msg) {
             getContext().getLog().info("Got a request for order history");
 
-            List<OrderProcessorActor.OrderReceipt> orderHistory = new LinkedList(this.historicalOrders);
+            List<OrderProcessorActor.OrderReceipt> orderHistory =
+                new LinkedList<>(this.historicalOrders);
             msg.getReplyTo().tell(new ResponseOrderHistoryMessage(orderHistory));
 
-            return Behaviors.same();
+            return this;
         }
 
         private Behavior<Message> onOrderProduct(OrderProductMessage msg) {
@@ -186,30 +233,26 @@ public class FridgeActor {
             List<Product> productsCopy = copyFridgeProducts(this.products);
 
             orderProcessor.tell(
-                new OrderProductMessage(product, msg.getOriginalSender(), getContext().getSelf(), productsCopy)
+                new OrderProductMessage(product, msg.getOriginalSender(), getContext().getSelf(),
+                    productsCopy)
             );
-            return Behaviors.same();
-
+            return this;
         }
 
         private Behavior<Message> onConsumeProduct(ConsumeProductMessage msg) {
             Product product = msg.getProduct();
-            // TODO: Check if fridge contains that product??
 
-
-            // calculate how many products of this type are left
-            float amountLeft = 0;
-            for (Product p : products) {
-                if (p.name.equals(product.name)) {
-                    amountLeft += 1;
-                }
+            if (!products.contains(msg.getProduct())) {
+                getContext().getLog().info("Product is not in fridge, are you kidding me?: {}",
+                    msg.getProduct().name);
+                return this;
             }
+            getContext().getLog().info("Consumed product from fridge: {}", msg.getProduct().name);
+
             products.remove(product);
-            // TODO: remove this if not finished
-            // this.itemCountSensor.tell(new ItemCountChangedMessage(this.products.size()));
 
             // re-order if now empty
-            if (amountLeft < 1.0f) {
+            if (FridgeActor.isProductEmpty(products, product)) {
                 getContext().getLog().info(
                     "Product {} is running out. Need to re-order",
                     product.name
@@ -226,7 +269,8 @@ public class FridgeActor {
                     )
                 );
             }
-            return Behaviors.same();
+
+            return this;
         }
 
     }
