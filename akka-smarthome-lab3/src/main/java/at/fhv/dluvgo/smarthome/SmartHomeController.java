@@ -10,7 +10,6 @@ import at.fhv.dluvgo.smarthome.actuators.ac.message.TemperatureChangedMessage;
 import at.fhv.dluvgo.smarthome.actuators.blinds.BlindsActor;
 import at.fhv.dluvgo.smarthome.actuators.cli.UserInputActor;
 import at.fhv.dluvgo.smarthome.actuators.fridge.FridgeActor;
-import at.fhv.dluvgo.smarthome.actuators.fridge.message.FridgeMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.OrderProductMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.RequestStoredProductsMessage;
 import at.fhv.dluvgo.smarthome.actuators.mediastation.MediaStationActor;
@@ -83,7 +82,7 @@ public class SmartHomeController {
                 environment.tell(new InitEnvironmentMessage());
                 mediaStation.tell(new MediaPlaybackRequestMessage("test"));
 
-                ActorRef<FridgeMessage> fridge = context.spawn(
+                ActorRef<Message> fridge = context.spawn(
                     FridgeActor.create(),
                     "fridge"
                 );
@@ -97,10 +96,10 @@ public class SmartHomeController {
                     "cli"
                 );
                 fridge.tell(new RequestStoredProductsMessage(cli));
-                // TODO: fix this.
-                
-                //fridge.tell(new OrderProductMessage(p, cli));
-                //fridge.tell(new OrderProductMessage(p, cli));
+
+                // TODO: fix this; separate into multiple messages so we don't need null
+                fridge.tell(new OrderProductMessage(p, cli, null));
+                fridge.tell(new OrderProductMessage(p, cli, null));
 
 
                 // Stop on termination
