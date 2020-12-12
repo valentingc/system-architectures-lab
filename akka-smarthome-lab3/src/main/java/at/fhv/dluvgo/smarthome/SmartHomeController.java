@@ -14,30 +14,17 @@ import at.fhv.dluvgo.smarthome.actuators.fridge.message.ConsumeProductMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.OrderProductMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.RequestStoredProductsMessage;
 import at.fhv.dluvgo.smarthome.actuators.mediastation.MediaStationActor;
-import at.fhv.dluvgo.smarthome.actuators.mediastation.message.MediaPlaybackRequestMessage;
 import at.fhv.dluvgo.smarthome.environment.EnvironmentActor;
 import at.fhv.dluvgo.smarthome.environment.message.InitEnvironmentMessage;
 import at.fhv.dluvgo.smarthome.sensor.TemperatureSensorActor;
 import at.fhv.dluvgo.smarthome.sensor.WeatherSensorActor;
 import at.fhv.dluvgo.smarthome.sensor.message.EnvTemperatureChangedMessage;
 import at.fhv.dluvgo.smarthome.sensor.message.EnvWeatherChangedMessage;
-import java.io.IOException;
 
 public class SmartHomeController {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         ActorSystem.create(create(), "SmartHomeSystem");
-
-//        boolean running = true;
-//        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-//        while (running) {
-//            String input = reader.readLine();
-//            if (input.equals("quit")) {
-//                running = false;
-//            } else if (input.equals("playMovie")) {
-//
-//            }
-//        }
     }
 
     /**
@@ -62,6 +49,10 @@ public class SmartHomeController {
                     MediaStationActor.create(blinds),
                     "media-station-actuator"
                 );
+                ActorRef<Message> fridge = context.spawn(
+                    FridgeActor.create(),
+                    "fridge"
+                );
 
                 // Sensors
                 ActorRef<EnvTemperatureChangedMessage> temperatureSensor = context.spawn(
@@ -80,28 +71,18 @@ public class SmartHomeController {
                 );
 
                 // Init environment
-                environment.tell(new InitEnvironmentMessage());
-                mediaStation.tell(new MediaPlaybackRequestMessage("test"));
-
-                ActorRef<Message> fridge = context.spawn(
-                    FridgeActor.create(),
-                    "fridge"
-                );
-
-                FridgeActor.Product p = new FridgeActor.Product(
-                    "Demoproduct",1,1
-                );
-
                 ActorRef<Message> cli = context.spawn(
-                    UserInputActor.create(),
+                    UserInputActor.create(fridge, mediaStation),
                     "cli"
                 );
-
+                environment.tell(new InitEnvironmentMessage());
 
                 // TODO: fix this; separate into multiple messages so we don't need null
+
+                FridgeActor.Product p = FridgeActor.Product.MILCH_SCHNITTE;
                 fridge.tell(new OrderProductMessage(p, cli, null));
                 Thread.sleep(500);
-                fridge.tell(new ConsumeProductMessage(p));
+                fridge.tell(new ConsumeProductMessage(p, replyTo));
                 Thread.sleep(500);
                 fridge.tell(new OrderProductMessage(p, cli, null));
                 Thread.sleep(200);

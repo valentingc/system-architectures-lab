@@ -75,13 +75,13 @@ public class MediaStationActor extends AbstractBehavior<Message> {
      */
     private Behavior<Message> onStopMediaPlaybackRequest(StopMediaPlaybackRequestMessage msg) {
         if (mediaPlaying) {
-            mediaPlaying = false;
-            currentMovie = null;
-
             getContext().getLog().info(
                 "Stopping media playback of [{}]",
                 currentMovie
             );
+
+            mediaPlaying = false;
+            currentMovie = null;
 
             blinds.tell(new MediaPlaybackStoppedMessage());
         } else {
