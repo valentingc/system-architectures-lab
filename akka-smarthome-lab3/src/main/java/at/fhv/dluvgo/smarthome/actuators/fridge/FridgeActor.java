@@ -169,6 +169,8 @@ public class FridgeActor {
                     "Product {} is running out. Need to re-order",
                     product.name
                 );
+                return this.onOrderProduct(new OrderProductMessage(product,
+                    getContext().getSelf(), this.products));
             }
             return Behaviors.same();
         }

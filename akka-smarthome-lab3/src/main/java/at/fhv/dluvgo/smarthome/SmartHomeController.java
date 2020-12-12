@@ -10,6 +10,7 @@ import at.fhv.dluvgo.smarthome.actuators.ac.message.TemperatureChangedMessage;
 import at.fhv.dluvgo.smarthome.actuators.blinds.BlindsActor;
 import at.fhv.dluvgo.smarthome.actuators.cli.UserInputActor;
 import at.fhv.dluvgo.smarthome.actuators.fridge.FridgeActor;
+import at.fhv.dluvgo.smarthome.actuators.fridge.message.ConsumeProductMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.OrderProductMessage;
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.RequestStoredProductsMessage;
 import at.fhv.dluvgo.smarthome.actuators.mediastation.MediaStationActor;
@@ -95,15 +96,24 @@ public class SmartHomeController {
                     UserInputActor.create(),
                     "cli"
                 );
-                fridge.tell(new RequestStoredProductsMessage(cli));
+
 
                 // TODO: fix this; separate into multiple messages so we don't need null
                 fridge.tell(new OrderProductMessage(p, cli, null));
+                Thread.sleep(500);
+                fridge.tell(new ConsumeProductMessage(p));
+                Thread.sleep(500);
                 fridge.tell(new OrderProductMessage(p, cli, null));
+                Thread.sleep(200);
                 fridge.tell(new OrderProductMessage(p, cli, null));
+                Thread.sleep(200);
                 fridge.tell(new OrderProductMessage(p, cli, null));
+                Thread.sleep(200);
                 fridge.tell(new OrderProductMessage(p, cli, null));
+                Thread.sleep(200);
                 fridge.tell(new OrderProductMessage(p, cli, null));
+                Thread.sleep(200);
+                fridge.tell(new RequestStoredProductsMessage(cli));
                 // Stop on termination
                 return Behaviors.receive(Void.class)
                     .onSignal(Terminated.class, sig -> Behaviors.stopped())
