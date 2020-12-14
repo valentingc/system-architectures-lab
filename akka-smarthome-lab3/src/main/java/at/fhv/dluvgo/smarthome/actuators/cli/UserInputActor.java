@@ -90,6 +90,10 @@ public class UserInputActor extends AbstractBehavior<Message> {
 
     private Behavior<Message> onOrderHistory(ResponseOrderHistoryMessage msg) {
         int i = 0;
+        if (msg.getOrderHistory().isEmpty()) {
+            getContext().getLog().info("Order history is empty");
+            return Behaviors.same();
+        }
         for (OrderProcessorActor.OrderReceipt receipt : msg.getOrderHistory()) {
             getContext().getLog().info("Order history #" + i++ + ": [" + receipt + "]");
         }
