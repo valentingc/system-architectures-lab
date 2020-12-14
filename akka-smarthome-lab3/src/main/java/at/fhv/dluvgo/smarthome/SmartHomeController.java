@@ -69,7 +69,7 @@ public class SmartHomeController {
 
                 // Init environment
                 ActorRef<Message> cli = context.spawn(
-                    UserInputActor.create(fridge, mediaStation),
+                    UserInputActor.create(environment, fridge, mediaStation),
                     "cli"
                 );
                 environment.tell(new InitEnvironmentMessage());

@@ -19,6 +19,11 @@ import at.fhv.dluvgo.smarthome.actuators.fridge.message.ResponseOrderHistoryMess
 import at.fhv.dluvgo.smarthome.actuators.fridge.message.ResponseStoredProductsMessage;
 import at.fhv.dluvgo.smarthome.actuators.mediastation.message.MediaPlaybackRequestMessage;
 import at.fhv.dluvgo.smarthome.actuators.mediastation.message.StopMediaPlaybackRequestMessage;
+import at.fhv.dluvgo.smarthome.common.WeatherType;
+import at.fhv.dluvgo.smarthome.environment.message.TemperatureChangeRequestMessage;
+import at.fhv.dluvgo.smarthome.environment.message.WeatherChangeRequestMessage;
+import at.fhv.dluvgo.smarthome.sensor.message.EnvTemperatureChangedMessage;
+import at.fhv.dluvgo.smarthome.sensor.message.EnvWeatherChangedMessage;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -29,25 +34,30 @@ public class UserInputActor extends AbstractBehavior<Message> {
         MOVIE_SUBMENU,
         FRIDGE_SUBMENU,
         FRIDGE_CONSUME_SUBMENU,
-        FRIDGE_ORDER_SUBMENU;
+        FRIDGE_ORDER_SUBMENU,
+        ENV_SUBMENU;
     }
 
+    private final ActorRef<Message> environment;
     private final ActorRef<Message> fridge;
     private final ActorRef<Message> mediaStation;
 
     public static Behavior<Message> create(
+        ActorRef<Message> environment,
         ActorRef<Message> fridge,
         ActorRef<Message> mediaStation
     ) {
-        return Behaviors.setup(ctx -> new UserInputActor(ctx, fridge, mediaStation));
+        return Behaviors.setup(ctx -> new UserInputActor(ctx, environment, fridge, mediaStation));
     }
 
     private UserInputActor(
         ActorContext<Message> context,
+        ActorRef<Message> environment,
         ActorRef<Message> fridge,
         ActorRef<Message> mediaStation
     ) {
         super(context);
+        this.environment = environment;
         this.fridge = fridge;
         this.mediaStation = mediaStation;
 
@@ -59,7 +69,8 @@ public class UserInputActor extends AbstractBehavior<Message> {
         return newReceiveBuilder()
             .onMessage(ResponseStoredProductsMessage.class, this::onStoredProductsResponse)
             .onMessage(ProductOrderedSuccessfullyMessage.class, this::onProductOrderedSuccessfully)
-            .onMessage(ProductOrderedUnsuccessfullyMessage.class, this::onProductOrderedUnsuccessfully)
+            .onMessage(ProductOrderedUnsuccessfullyMessage.class,
+                this::onProductOrderedUnsuccessfully)
             .onMessage(ResponseOrderHistoryMessage.class, this::onOrderHistory)
             .build();
     }
@@ -79,7 +90,8 @@ public class UserInputActor extends AbstractBehavior<Message> {
         return Behaviors.same();
     }
 
-    private Behavior<Message> onProductOrderedUnsuccessfully(ProductOrderedUnsuccessfullyMessage msg) {
+    private Behavior<Message> onProductOrderedUnsuccessfully(
+        ProductOrderedUnsuccessfullyMessage msg) {
         getContext().getLog().info(
             "Could not order product [{}] because [{}]",
             msg.getProduct().name,
@@ -119,6 +131,7 @@ public class UserInputActor extends AbstractBehavior<Message> {
                 System.out.println("Welcome to the SmartHomeSystem by Valentin & Dominic");
                 System.out.println("1) Control media station");
                 System.out.println("2) Control fridge");
+                System.out.println("3) Control environment");
                 System.out.println("0) Quit the system");
 
                 String input = reader.readLine();
@@ -130,6 +143,10 @@ public class UserInputActor extends AbstractBehavior<Message> {
                     case "2":
                     case "fridge":
                         state = MenuState.FRIDGE_SUBMENU;
+                        break;
+                    case "3":
+                    case "env":
+                        state = MenuState.ENV_SUBMENU;
                         break;
                     case "0":
                     case "quit":
@@ -253,6 +270,87 @@ public class UserInputActor extends AbstractBehavior<Message> {
                     ));
                 }
             }
+
+            while (state.equals(MenuState.ENV_SUBMENU)) {
+                System.out.println("Please choose an option..");
+                System.out.println("1) Change environment temperature");
+                System.out.println("2) Change environment weather");
+                System.out.println("0) Back to main menu");
+
+                switch (reader.readLine()) {
+                    case "1":
+                    case "temp":
+                        System.out.println("Please enter a new temperature (e.g. 22.0)");
+
+                        String tempInput = reader.readLine();
+                        float temp;
+                        try {
+                            temp = Float.parseFloat(tempInput);
+                        } catch (NumberFormatException e) {
+                            System.err.println("Please enter a valid number");
+                            break;
+                        }
+
+                        if (temp <= 15.0 || temp >= 28.5f) {
+                            System.err.println(
+                                "The environment temperature must be within the following range: "
+                                    + " [15.0 ; 28.5]"
+                            );
+                            break;
+                        }
+
+                        environment.tell(new TemperatureChangeRequestMessage(temp));
+                        break;
+                    case "2":
+                    case "weather":
+                        System.out.println(
+                            "Please enter a new weather (e.g. Sunny, Cloudy, Rainy)"
+                        );
+
+                        String weatherInput = reader.readLine();
+                        if (!checkIfEnteredWeatherExists(weatherInput)) {
+                            System.err.println(
+                                "Please enter a valid weather type (Sunny, Cloud, Rainy)"
+                            );
+                            break;
+                        }
+
+                        environment.tell(new WeatherChangeRequestMessage(
+                            getRawWeatherTypeForString(weatherInput)
+                        ));
+                        break;
+                    case "0":
+                    case "back":
+                        state = MenuState.MAIN_MENU;
+                        break;
+                    default:
+                        System.err.println("Unknown command");
+                        break;
+                }
+            }
         }
+    }
+
+    private boolean checkIfEnteredWeatherExists(String input) {
+        boolean weatherTypeExists = false;
+        for (WeatherType type : WeatherType.values()) {
+            if (type.name().equalsIgnoreCase(input)) {
+                weatherTypeExists = true;
+                break;
+            }
+        }
+
+        return weatherTypeExists;
+    }
+
+    private int getRawWeatherTypeForString(String input) {
+        int type = 0;
+        if (input.equalsIgnoreCase("cloudy")) {
+            type = 1;
+        } else if (input.equalsIgnoreCase("rainy")) {
+            type = 2;
+        }
+
+        return type;
     }
 }
