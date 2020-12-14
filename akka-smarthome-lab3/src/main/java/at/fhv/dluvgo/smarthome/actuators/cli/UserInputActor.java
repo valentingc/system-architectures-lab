@@ -25,7 +25,6 @@ import java.io.InputStreamReader;
 
 public class UserInputActor extends AbstractBehavior<Message> {
     private enum MenuState {
-        QUIT,
         MAIN_MENU,
         MOVIE_SUBMENU,
         FRIDGE_SUBMENU,
@@ -102,7 +101,7 @@ public class UserInputActor extends AbstractBehavior<Message> {
             try {
                 handleCliInput();
             } catch (IOException e) {
-                e.printStackTrace();
+                getContext().getLog().error("An error occurred while reading the CLI input", e);
             }
         }).start();
     }
@@ -111,8 +110,7 @@ public class UserInputActor extends AbstractBehavior<Message> {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         MenuState state = MenuState.MAIN_MENU;
 
-        boolean running = true;
-        while (running) {
+        while (true) {
             while (state.equals(MenuState.MAIN_MENU)) {
                 System.out.println("Welcome to the SmartHomeSystem by Valentin & Dominic");
                 System.out.println("1) Control media station");
@@ -131,9 +129,7 @@ public class UserInputActor extends AbstractBehavior<Message> {
                         break;
                     case "0":
                     case "quit":
-                        running = false;
-                        state = MenuState.QUIT;
-                        break;
+                        System.exit(0);
                     default:
                         System.err.println("Unknown command");
                         break;
