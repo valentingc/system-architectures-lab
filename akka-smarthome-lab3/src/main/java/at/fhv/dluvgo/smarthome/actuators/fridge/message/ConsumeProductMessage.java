@@ -8,10 +8,7 @@ public class ConsumeProductMessage implements Message {
     private final FridgeActor.Product product;
     private final ActorRef<Message> replyTo;
 
-    public ConsumeProductMessage(
-        FridgeActor.Product product,
-        ActorRef<Message> replyTo
-    ) {
+    public ConsumeProductMessage(FridgeActor.Product product, ActorRef<Message> replyTo) {
         this.product = product;
         this.replyTo = replyTo;
     }
