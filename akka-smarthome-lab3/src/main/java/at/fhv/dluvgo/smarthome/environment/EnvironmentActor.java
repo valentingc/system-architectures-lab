@@ -105,18 +105,22 @@ public class EnvironmentActor extends AbstractBehavior<Message> {
      * @return this - no change of behaviour
      */
     private Behavior<Message> onTemperatureChangeRequest(TemperatureChangeRequestMessage msg) {
-        float tempDifference = 0.0f;
-        if (currentTemperature <= 15.0) {
-            tempDifference = +3.0f;
-        } else if (currentTemperature >= 28.5) {
-            tempDifference = -3.0f;
-        }
+        if (!msg.isTempOverride()) {
+            float tempDifference = 0.0f;
+            if (currentTemperature <= 15.0) {
+                tempDifference = +3.0f;
+            } else if (currentTemperature >= 28.5) {
+                tempDifference = -3.0f;
+            }
 
-        currentTemperature += tempDifference;
-        if (new Random().nextInt(10) >= 5) {
-            currentTemperature -= 1.5;
+            currentTemperature += tempDifference;
+            if (new Random().nextInt(10) >= 5) {
+                currentTemperature -= 1.5;
+            } else {
+                currentTemperature += 1.5;
+            }
         } else {
-            currentTemperature += 1.5;
+            currentTemperature = msg.getTemperature();
         }
 
         temperatureSensor.tell(new EnvTemperatureChangedMessage(currentTemperature));
@@ -132,7 +136,11 @@ public class EnvironmentActor extends AbstractBehavior<Message> {
      * @return this - no change of behaviour
      */
     private Behavior<Message> onWeatherChangeRequest(WeatherChangeRequestMessage msg) {
-        currentWeather = new Random().nextInt(WeatherType.values().length);
+        if (!msg.isWeatherOverride()) {
+            currentWeather = new Random().nextInt(WeatherType.values().length);
+        } else {
+            currentWeather = msg.getWeather();
+        }
 
         weatherSensor.tell(new EnvWeatherChangedMessage(currentWeather));
         getContext().getLog().info(
