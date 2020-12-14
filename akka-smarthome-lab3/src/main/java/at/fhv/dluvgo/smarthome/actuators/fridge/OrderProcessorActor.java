@@ -50,15 +50,6 @@ public class OrderProcessorActor extends AbstractBehavior<Message> {
         super(context);
     }
 
-    private float calculateTotalWeight(List<FridgeActor.Product> currentProducts) {
-        float weight = 0.0f;
-        for (FridgeActor.Product product : currentProducts) {
-            weight += product.weight;
-        }
-
-        return weight;
-    }
-
     @Override
     public Receive<Message> createReceive() {
         return newReceiveBuilder()
@@ -76,36 +67,16 @@ public class OrderProcessorActor extends AbstractBehavior<Message> {
      */
     private Behavior<Message> onOrderProduct(OrderProductMessage msg) {
         FridgeActor.Product product = msg.getProductToOrder();
-        List<FridgeActor.Product> products = msg.getCurrentProducts();
-
-        getContext().getLog().info("Ordering product: {}", msg.getProductToOrder().name);
-
-        if ((products.size() + 1) > FridgeActor.MAX_ITEMS) {
-            getContext().getLog().info("Fridge is now full (maximum amount of items reached)");
-            msg.getReplyTo().tell(new ProductOrderedUnsuccessfullyMessage(
-                product,
-                msg.getOriginalSender(),
-                "Max item count reached"
-            ));
-            return Behaviors.same();
-        } else if ((calculateTotalWeight(products) + product.weight) > FridgeActor.MAX_WEIGHT) {
-            getContext().getLog().info("Fridge is now full (maximum weight reached)");
-            msg.getReplyTo().tell(new ProductOrderedUnsuccessfullyMessage(
-                product,
-                msg.getOriginalSender(),
-                "Max weight reached"
-            ));
-            return Behaviors.same();
-        }
-
-        products.add(product);
+        getContext().getLog().info(
+            "Ordering product: {}",
+            msg.getProductToOrder().name
+        );
 
         List<FridgeActor.Product> orderedProducts = new LinkedList<>();
         orderedProducts.add(product);
 
         msg.getReplyTo().tell(new ProductOrderedSuccessfullyMessage(
             msg.getProductToOrder(),
-            msg.getOriginalSender(),
             new OrderReceipt(orderedProducts)
         ));
         return Behaviors.same();

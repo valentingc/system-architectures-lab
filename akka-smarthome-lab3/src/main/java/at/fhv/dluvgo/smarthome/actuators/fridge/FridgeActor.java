@@ -27,7 +27,7 @@ public class FridgeActor {
         MILK("Milk", 1, 1.50f),
         BUTTER("Butter", 0.25f, 0.99f),
         YOGHURT("Yoghurt", 0.2f, 0.79f),
-        WHITE_WHINE("White Wine", 0.71f, 4.99f),
+        WHITE_WHINE("White Wine XXL", 1.7f, 4.99f),
         MILCH_SCHNITTE("Milchschnitte", 0.3f, 1.99f);
 
         public final String name;
@@ -101,10 +101,6 @@ public class FridgeActor {
                     ProductOrderedSuccessfullyMessage.class,
                     this::onProductOrderedSuccessfully
                 )
-                .onMessage(
-                    ProductOrderedUnsuccessfullyMessage.class,
-                    this::onProductOrderedUnsuccessfully
-                )
                 .onMessage(RequestOrderHistoryMessage.class, this::onOrderHistoryRequest)
                 .onMessage(RequestStoredProductsMessage.class, this::onStoredProductsRequest)
                 .build();
@@ -122,25 +118,15 @@ public class FridgeActor {
             this.products.add(msg.getProduct());
             this.historicalOrders.add(msg.getReceipt());
             getContext().getLog().info(
-                "Product was ordered and restocked: {}, New Fridge Amount: {}/{}",
+                "Product was ordered and restocked: {}, New amount: {}/{}, New weight: {}/{}kg",
                 msg.getProduct().name,
                 this.products.size(),
-                MAX_ITEMS
+                MAX_ITEMS,
+                calculateTotalWeight(products),
+                MAX_WEIGHT
             );
 
             return this;
-        }
-
-        private Behavior<Message> onProductOrderedUnsuccessfully(
-            ProductOrderedUnsuccessfullyMessage msg
-        ) {
-            getContext().getLog().info(
-                "Could not order product: {}, Reason: {}",
-                msg.getProduct().name,
-                msg.getReason()
-            );
-            msg.getOriginalSender().tell(msg);
-            return FridgeActor.FullFridgeBehavior.create(products, historicalOrders);
         }
 
         private Behavior<Message> onOrderHistoryRequest(RequestOrderHistoryMessage msg) {
@@ -156,13 +142,37 @@ public class FridgeActor {
 
         private Behavior<Message> onOrderProduct(OrderProductMessage msg) {
             Product product = msg.getProductToOrder();
-            List<Product> productsCopy = copyFridgeProducts(this.products);
+
+            float currentWeight = calculateTotalWeight(products);
+
+            if ((products.size() + 1) > FridgeActor.MAX_ITEMS) {
+                getContext().getLog().info(
+                    "Fridge is now full (maximum amount of items reached, {}/{})",
+                    products.size(),
+                    MAX_ITEMS
+                    );
+
+                msg.getReplyTo().tell(new ProductOrderedUnsuccessfullyMessage(
+                    product,
+                    "Max item count reached"
+                ));
+                return FridgeActor.FullFridgeBehavior.create(products, historicalOrders);
+            } else if ((currentWeight + product.weight) > FridgeActor.MAX_WEIGHT) {
+                getContext().getLog().info(
+                    "Fridge is now full (maximum weight reached, {}/{}kg)",
+                    currentWeight + product.weight,
+                    MAX_WEIGHT
+                );
+                msg.getReplyTo().tell(new ProductOrderedUnsuccessfullyMessage(
+                    product,
+                    "Max weight reached"
+                ));
+                return FridgeActor.FullFridgeBehavior.create(products, historicalOrders);
+            }
 
             orderProcessor.tell(new OrderProductMessage(
                 product,
-                msg.getOriginalSender(),
-                getContext().getSelf(),
-                productsCopy
+                getContext().getSelf()
             ));
 
             return this;
@@ -178,9 +188,16 @@ public class FridgeActor {
                 );
                 return this;
             }
-            getContext().getLog().info("Consumed product from fridge: {}", msg.getProduct().name);
-
             products.remove(product);
+
+            getContext().getLog().info(
+                "Consumed product from fridge: {}, New amount: {}/{}, New weight: {}/{}kg",
+                msg.getProduct().name,
+                products.size(),
+                MAX_ITEMS,
+                calculateTotalWeight(products),
+                MAX_WEIGHT
+            );
 
             // Re-order product if it's now empty
             if (FridgeActor.isProductRunningOut(products, product)) {
@@ -193,13 +210,20 @@ public class FridgeActor {
                 // the product. Being as transparent as possible.. :)
                 return this.onOrderProduct(new OrderProductMessage(
                     product,
-                    msg.getReplyTo(),
-                    getContext().getSelf(),
-                    this.products
+                    getContext().getSelf()
                 ));
             }
 
             return this;
+        }
+
+        private float calculateTotalWeight(List<FridgeActor.Product> currentProducts) {
+            float weight = 0.0f;
+            for (FridgeActor.Product product : currentProducts) {
+                weight += product.weight;
+            }
+
+            return weight;
         }
     }
 

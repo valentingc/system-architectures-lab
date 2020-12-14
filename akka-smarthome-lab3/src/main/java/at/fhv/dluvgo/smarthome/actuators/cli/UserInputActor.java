@@ -215,7 +215,7 @@ public class UserInputActor extends AbstractBehavior<Message> {
                 System.out.println("1) Milk (1kg, 1,50€)");
                 System.out.println("2) Butter (0.25kg, 0.99€)");
                 System.out.println("3) Yoghurt (0.20kg, 0.79€)");
-                System.out.println("4) White Wine (0.71kg, 4.99€)");
+                System.out.println("4) White Wine XXL (1.7kg, 4.99€)");
                 System.out.println("5) Milchschnitte (0.30kg, 1.99€)");
                 System.out.println("0) Back to fridge menu");
 
@@ -249,9 +249,7 @@ public class UserInputActor extends AbstractBehavior<Message> {
                 } else {
                     fridge.tell(new OrderProductMessage(
                         product,
-                        getContext().getSelf(),
-                        getContext().getSelf(),
-                        null
+                        getContext().getSelf()
                     ));
                 }
             }
