@@ -14,5 +14,4 @@ public class ResponseOrderHistoryMessage implements Message {
     public List<OrderProcessorActor.OrderReceipt> getOrderHistory() {
         return this.orderHistory;
     }
-
 }

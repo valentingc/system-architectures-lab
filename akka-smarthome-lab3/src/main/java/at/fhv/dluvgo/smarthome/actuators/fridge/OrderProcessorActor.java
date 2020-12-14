@@ -15,10 +15,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class OrderProcessorActor extends AbstractBehavior<Message> {
-    private final ActorRef<Message> replyTo;
-    private final float MAX_WEIGHT;
-    private final int MAX_ITEMS;
-
     public static final class OrderReceipt {
         private final LocalDateTime orderDate;
         private final List<FridgeActor.Product> productsOrdered;
@@ -40,33 +36,18 @@ public class OrderProcessorActor extends AbstractBehavior<Message> {
 
         @Override
         public String toString() {
-            return "Order date: " + orderDate + "; Number of products: #" + productsOrdered.size() + "; Sum: " + orderSum + "€";
+            return "Order date: " + orderDate + "; "
+                + "Number of products: #" + productsOrdered.size() + ";"
+                + "Sum: " + orderSum + "€";
         }
     }
 
-    public OrderProcessorActor(
-        ActorContext<Message> context,
-        ActorRef<Message> replyTo,
-        float maxWeight,
-        int maxItems
-    ) {
-        super(context);
-        this.replyTo = replyTo;
-        this.MAX_WEIGHT = maxWeight;
-        this.MAX_ITEMS = maxItems;
+    public static Behavior<Message> create(ActorRef<Message> replyTo) {
+        return Behaviors.setup(OrderProcessorActor::new);
     }
 
-    public static Behavior<Message> create(
-        ActorRef<Message> replyTo,
-        float maxWeight,
-        int maxItems
-    ) {
-        return Behaviors.setup(ctx -> new OrderProcessorActor(
-            ctx,
-            replyTo,
-            maxWeight,
-            maxItems
-        ));
+    private OrderProcessorActor(ActorContext<Message> context) {
+        super(context);
     }
 
     private float calculateTotalWeight(List<FridgeActor.Product> currentProducts) {
@@ -85,30 +66,35 @@ public class OrderProcessorActor extends AbstractBehavior<Message> {
             .build();
     }
 
+    /**
+     * Handles a product order {@link OrderProductMessage}. If the fridge is full (either by
+     * {@link FridgeActor#MAX_ITEMS} or by {@link FridgeActor#MAX_WEIGHT}), the order is ignored.
+     *
+     * @param msg The order message
+     *
+     * @return {@link Behaviors#same()} - no change of behavior
+     */
     private Behavior<Message> onOrderProduct(OrderProductMessage msg) {
         FridgeActor.Product product = msg.getProductToOrder();
         List<FridgeActor.Product> products = msg.getCurrentProducts();
 
-        getContext().getLog().info("Ordering Product: {}", msg.getProductToOrder().name);
+        getContext().getLog().info("Ordering product: {}", msg.getProductToOrder().name);
 
-        if ((products.size() + 1) > MAX_ITEMS) {
-            getContext().getLog().info("Fridge is now full (max_items)");
-            msg.getReplyTo().tell(
-                new ProductOrderedUnsuccessfullyMessage(
-                    product,
-                    msg.getOriginalSender(),
-                    "Max item count reached")
-            );
+        if ((products.size() + 1) > FridgeActor.MAX_ITEMS) {
+            getContext().getLog().info("Fridge is now full (maximum amount of items reached)");
+            msg.getReplyTo().tell(new ProductOrderedUnsuccessfullyMessage(
+                product,
+                msg.getOriginalSender(),
+                "Max item count reached"
+            ));
             return Behaviors.same();
-        } else if ((calculateTotalWeight(products) + product.weight) > MAX_WEIGHT) {
-            getContext().getLog().info("Fridge is now full (max_weight)");
-            msg.getReplyTo().tell(
-                new ProductOrderedUnsuccessfullyMessage(
-                    product,
-                    msg.getOriginalSender(),
-                    "Max weight reached"
-                )
-            );
+        } else if ((calculateTotalWeight(products) + product.weight) > FridgeActor.MAX_WEIGHT) {
+            getContext().getLog().info("Fridge is now full (maximum weight reached)");
+            msg.getReplyTo().tell(new ProductOrderedUnsuccessfullyMessage(
+                product,
+                msg.getOriginalSender(),
+                "Max weight reached"
+            ));
             return Behaviors.same();
         }
 
@@ -116,13 +102,12 @@ public class OrderProcessorActor extends AbstractBehavior<Message> {
 
         List<FridgeActor.Product> orderedProducts = new LinkedList<>();
         orderedProducts.add(product);
-        msg.getReplyTo().tell(
-            new ProductOrderedSuccessfullyMessage(
-                msg.getProductToOrder(),
-                msg.getOriginalSender(),
-                new OrderReceipt(orderedProducts)
-            )
-        );
+
+        msg.getReplyTo().tell(new ProductOrderedSuccessfullyMessage(
+            msg.getProductToOrder(),
+            msg.getOriginalSender(),
+            new OrderReceipt(orderedProducts)
+        ));
         return Behaviors.same();
     }
 }

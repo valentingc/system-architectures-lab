@@ -5,16 +5,15 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
-import at.fhv.dluvgo.smarthome.Message;
+import at.fhv.dluvgo.smarthome.actuators.fridge.sensor.message.ItemCountChangedMessage;
 
+// TODO - Determine whether needed or not
 public class FridgeItemCountSensor extends AbstractBehavior<ItemCountChangedMessage> {
     private int itemCount;
 
     public static Behavior<ItemCountChangedMessage> create(
     ) {
-        return Behaviors.setup(ctx -> new FridgeItemCountSensor(
-            ctx
-        ));
+        return Behaviors.setup(FridgeItemCountSensor::new);
     }
 
     private FridgeItemCountSensor(
@@ -30,9 +29,7 @@ public class FridgeItemCountSensor extends AbstractBehavior<ItemCountChangedMess
             .build();
     }
 
-    private Behavior<ItemCountChangedMessage> onItemCountChanged(
-        ItemCountChangedMessage msg
-    ) {
+    private Behavior<ItemCountChangedMessage> onItemCountChanged(ItemCountChangedMessage msg) {
         itemCount = msg.getItemCount();
         getContext().getLog().debug("Received new fridge item count value: {}", msg.getItemCount());
 

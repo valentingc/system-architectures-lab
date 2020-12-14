@@ -9,5 +9,4 @@ public class RequestStoredProductsMessage implements Message {
     public RequestStoredProductsMessage(ActorRef<Message> replyTo) {
         this.replyTo = replyTo;
     }
-
 }
