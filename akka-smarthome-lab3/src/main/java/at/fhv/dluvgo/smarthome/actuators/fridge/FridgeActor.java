@@ -139,6 +139,7 @@ public class FridgeActor {
                 msg.getProduct().name,
                 msg.getReason()
             );
+            msg.getOriginalSender().tell(msg);
             return FridgeActor.FullFridgeBehavior.create(products, historicalOrders);
         }
 
