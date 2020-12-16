@@ -236,14 +236,6 @@ public class FridgeActor {
             return this;
         }
 
-        private float calculateTotalWeight(List<FridgeActor.Product> currentProducts) {
-            float weight = 0.0f;
-            for (FridgeActor.Product product : currentProducts) {
-                weight += product.weight;
-            }
-
-            return weight;
-        }
     }
 
     /**
@@ -280,6 +272,10 @@ public class FridgeActor {
                 .onMessage(OrderProductMessage.class, this::onOrderProduct)
                 .onMessage(RequestOrderHistoryMessage.class, this::onOrderHistoryRequest)
                 .onMessage(RequestStoredProductsMessage.class, this::onStoredProductsRequest)
+                .onMessage(
+                    ProductOrderedSuccessfullyMessage.class,
+                    this::onProductOrderedSuccessfully
+                )
                 .build();
         }
 
@@ -317,6 +313,23 @@ public class FridgeActor {
             msg.replyTo.tell(new ResponseStoredProductsMessage(productsCopy));
             return this;
         }
+
+        private Behavior<Message> onProductOrderedSuccessfully(
+            ProductOrderedSuccessfullyMessage msg
+        ) {
+            this.products.add(msg.getProduct());
+            this.historicalOrders.add(msg.getReceipt());
+            getContext().getLog().info(
+                "Product was ordered and restocked: {}, New amount: {}/{}, New weight: {}/{}kg",
+                msg.getProduct().name,
+                this.products.size(),
+                MAX_ITEMS,
+                calculateTotalWeight(products),
+                MAX_WEIGHT
+            );
+
+            return this;
+        }
     }
 
     /**
@@ -348,5 +361,14 @@ public class FridgeActor {
             }
         }
         return amountLeft < 1;
+    }
+
+    private static float calculateTotalWeight(List<FridgeActor.Product> currentProducts) {
+        float weight = 0.0f;
+        for (FridgeActor.Product product : currentProducts) {
+            weight += product.weight;
+        }
+
+        return weight;
     }
 }
