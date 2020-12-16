@@ -156,18 +156,37 @@ public class FridgeActor {
                     product,
                     "Max item count reached"
                 ));
+                orderProcessor.tell(new OrderProductMessage(
+                    product,
+                    getContext().getSelf()
+                ));
                 return FridgeActor.FullFridgeBehavior.create(products, historicalOrders);
-            } else if ((currentWeight + product.weight) > FridgeActor.MAX_WEIGHT) {
+            }
+
+            if ((currentWeight + product.weight) == FridgeActor.MAX_WEIGHT) {
                 getContext().getLog().info(
                     "Fridge is now full (maximum weight reached, {}/{}kg)",
                     currentWeight + product.weight,
                     MAX_WEIGHT
                 );
+
+                orderProcessor.tell(new OrderProductMessage(
+                    product,
+                    getContext().getSelf()
+                ));
+
+                return FridgeActor.FullFridgeBehavior.create(products, historicalOrders);
+            } else if ((currentWeight + product.weight) > FridgeActor.MAX_WEIGHT) {
+                getContext().getLog().info(
+                    "Product does not fit in (too much weight, would be {}/{}kg)",
+                    currentWeight + product.weight,
+                    MAX_WEIGHT
+                );
                 msg.getReplyTo().tell(new ProductOrderedUnsuccessfullyMessage(
                     product,
-                    "Max weight reached"
+                    "Product does not fit in (too much weight)"
                 ));
-                return FridgeActor.FullFridgeBehavior.create(products, historicalOrders);
+                return this;
             }
 
             orderProcessor.tell(new OrderProductMessage(
