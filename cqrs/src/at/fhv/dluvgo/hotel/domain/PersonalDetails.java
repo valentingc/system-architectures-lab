@@ -1,4 +1,4 @@
-package at.fhv.dluvgo.cqrs.hotel.domain;
+package at.fhv.dluvgo.hotel.domain;
 
 public class PersonalDetails {
     private final String bookingMadeBy;

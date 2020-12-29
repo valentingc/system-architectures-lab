@@ -1,8 +1,10 @@
-package at.fhv.dluvgo.cqrs.hotel.domain;
+package at.fhv.dluvgo.hotel.domain;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public class Booking {
+    private final UUID id;
     private final Room room;
     private final LocalDateTime start;
     private final LocalDateTime end;
@@ -14,6 +16,7 @@ public class Booking {
         LocalDateTime end,
         PersonalDetails personalDetails
     ) {
+        this.id = UUID.randomUUID();
         this.room = room;
         this.start = start;
         this.end = end;
@@ -49,6 +52,10 @@ public class Booking {
     // TODO - ?
 
     /* ### Getter ### */
+
+    public UUID getId() {
+        return id;
+    }
 
     public Room getRoom() {
         return room;

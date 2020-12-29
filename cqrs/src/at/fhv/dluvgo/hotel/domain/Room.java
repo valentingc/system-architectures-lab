@@ -1,4 +1,4 @@
-package at.fhv.dluvgo.cqrs.hotel.domain;
+package at.fhv.dluvgo.hotel.domain;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
