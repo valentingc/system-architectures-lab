@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 public class EventStore {
-
     private Map<String, List<Event>> store = new HashMap<>();
 
     public void addEvent(String id, Event event) {
@@ -24,5 +23,4 @@ public class EventStore {
     public List<Event> getEvents(String id) {
         return store.get(id);
     }
-
 }
