@@ -1,4 +1,4 @@
-package at.fhv.dluvgo.cqrs.hotel;
+package at.fhv.dluvgo.cqrs;
 
 public class Main {
 
