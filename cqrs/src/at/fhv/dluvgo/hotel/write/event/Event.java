@@ -1,4 +1,4 @@
-package at.fhv.dluvgo.hotel.events;
+package at.fhv.dluvgo.hotel.write.event;
 
 import java.util.Date;
 import java.util.UUID;

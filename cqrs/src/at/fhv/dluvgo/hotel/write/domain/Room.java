@@ -1,4 +1,4 @@
-package at.fhv.dluvgo.hotel.domain;
+package at.fhv.dluvgo.hotel.write.domain;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -12,12 +12,12 @@ public class Room {
     private final int maxPeople;
     private final List<Booking> bookings = new LinkedList<>();
 
-    public Room() {
-        this(new Random().nextInt(4));
+    public Room(UUID roomNumber) {
+        this(roomNumber, new Random().nextInt(4));
     }
 
-    public Room(int maxPeople) {
-        roomNumber = UUID.randomUUID();
+    public Room(UUID roomNumber, int maxPeople) {
+        this.roomNumber = roomNumber;
         this.maxPeople = maxPeople;
     }
 
@@ -25,7 +25,9 @@ public class Room {
 
     public boolean isFree(LocalDateTime start, LocalDateTime end) {
         for (Booking booking : bookings) {
-            if (booking.getStart().isBefore(end) && start.isBefore(booking.getEnd())) {
+            if (booking.getState().equals(Booking.State.ACTIVE) &&
+                booking.getStart().isBefore(end) && start.isBefore(booking.getEnd())
+            ) {
                 return false;
             }
         }
