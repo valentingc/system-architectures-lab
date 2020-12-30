@@ -1,14 +1,20 @@
-package at.fhv.dluvgo.hotel.domain;
+package at.fhv.dluvgo.hotel.write.domain;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 public class Booking {
+    public enum State {
+        ACTIVE,
+        CANCELLED
+    }
+
     private final UUID id;
     private final Room room;
     private final LocalDateTime start;
     private final LocalDateTime end;
     private final PersonalDetails personalDetails;
+    private State state;
 
     private Booking(
         Room room,
@@ -21,6 +27,7 @@ public class Booking {
         this.start = start;
         this.end = end;
         this.personalDetails = personalDetails;
+        this.state = State.ACTIVE;
     }
 
     public static Booking create(
@@ -49,7 +56,9 @@ public class Booking {
 
     /* ### Business logic ### */
 
-    // TODO - ?
+    public void cancel() {
+        state = State.CANCELLED;
+    }
 
     /* ### Getter ### */
 
@@ -71,5 +80,9 @@ public class Booking {
 
     public PersonalDetails getPersonalDetails() {
         return personalDetails;
+    }
+
+    public State getState() {
+        return state;
     }
 }
