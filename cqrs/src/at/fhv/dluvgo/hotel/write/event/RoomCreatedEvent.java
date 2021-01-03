@@ -4,18 +4,18 @@ import java.util.UUID;
 
 public class RoomCreatedEvent extends Event {
     private final UUID roomNumber;
-    private final int maxPeople;
+    private final int capacity;
 
-    public RoomCreatedEvent(UUID roomNumber, int maxPeople) {
+    public RoomCreatedEvent(UUID roomNumber, int capacity) {
         this.roomNumber = roomNumber;
-        this.maxPeople = maxPeople;
+        this.capacity = capacity;
     }
 
     public UUID getRoomNumber() {
         return roomNumber;
     }
 
-    public int getMaxPeople() {
-        return maxPeople;
+    public int getCapacity() {
+        return capacity;
     }
 }

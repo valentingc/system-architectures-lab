@@ -19,7 +19,7 @@ public class RoomUtility {
         for (Event event : events) {
             if (event instanceof RoomCreatedEvent) {
                 RoomCreatedEvent e = (RoomCreatedEvent) event;
-                room = new Room(e.getRoomNumber(), e.getMaxPeople());
+                room = new Room(e.getRoomNumber(), e.getCapacity());
             } else if (event instanceof RoomBookedEvent) {
                 RoomBookedEvent e = (RoomBookedEvent) event;
                 if (null != room) {
