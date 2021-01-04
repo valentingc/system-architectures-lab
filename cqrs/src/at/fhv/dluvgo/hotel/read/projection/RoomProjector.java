@@ -17,6 +17,7 @@ public class RoomProjector implements Observer {
         12,
         31
     ).atTime(LocalTime.MAX);
+    private static final int CHECKOUT_HOUR = 11;
 
     private final ReadRepository readRepository;
 
@@ -42,6 +43,72 @@ public class RoomProjector implements Observer {
         ));
     }
 
+    private void splitBookableRoom(BookableRoom room, RoomBookedEvent event) {
+        this.readRepository.addBookableRoom(new BookableRoom(
+            room.getRoomNumber(),
+            room.getStart(),
+            event.getBookingStartTime().toLocalDate().atTime(CHECKOUT_HOUR,0),
+            room.getCapacity()
+        ));
+
+        if (event.getBookingEndTime().getHour() > CHECKOUT_HOUR) {
+            this.readRepository.addBookableRoom(new BookableRoom(
+                room.getRoomNumber(),
+                event.getBookingEndTime().plusDays(1)
+                    .withHour(CHECKOUT_HOUR)
+                    .withMinute(0)
+                    .withSecond(0),
+                room.getEnd(),
+                room.getCapacity()
+            ));
+        } else {
+            this.readRepository.addBookableRoom(new BookableRoom(
+                room.getRoomNumber(),
+                event.getBookingEndTime().withHour(CHECKOUT_HOUR)
+                    .withMinute(0)
+                    .withSecond(0),
+                room.getEnd(),
+                room.getCapacity()
+            ));
+        }
+        this.readRepository.removeBookableRoom(room);
+    }
+
+    private void addBookableRoomAfter(BookableRoom room, RoomBookedEvent event) {
+        if (event.getBookingEndTime().getHour() > CHECKOUT_HOUR) {
+            this.readRepository.addBookableRoom(new BookableRoom(
+                room.getRoomNumber(),
+                event.getBookingEndTime().plusDays(1)
+                    .withHour(CHECKOUT_HOUR)
+                    .withMinute(0)
+                    .withSecond(0),
+                room.getEnd(),
+                room.getCapacity()
+            ));
+        } else {
+            this.readRepository.addBookableRoom(new BookableRoom(
+                room.getRoomNumber(),
+                event.getBookingEndTime(),
+                room.getEnd(),
+                room.getCapacity()
+            ));
+        }
+        this.readRepository.removeBookableRoom(room);
+    }
+
+    private void addBookableRoomBefore(BookableRoom room, RoomBookedEvent event) {
+        this.readRepository.addBookableRoom(new BookableRoom(
+            room.getRoomNumber(),
+            room.getStart(),
+            event.getBookingStartTime().withHour(CHECKOUT_HOUR)
+                .withMinute(0)
+                .withSecond(0),
+            room.getCapacity()
+        ));
+
+        this.readRepository.removeBookableRoom(room);
+    }
+
     private void apply(RoomBookedEvent event) {
         List<BookableRoom> bookableRooms = this.readRepository.getBookableRooms(
             event.getRoomNumber()
@@ -56,10 +123,23 @@ public class RoomProjector implements Observer {
 
         BookableRoom currentBookableRoom = null;
         for (BookableRoom br : bookableRooms) {
-            if (!br.getStart().isAfter(event.getBookingEndTime()) &&
-                !event.getBookingStartTime().isAfter(br.getEnd())
+            if (br.getStart().isBefore(event.getBookingStartTime())
+                && br.getEnd().isAfter(event.getBookingEndTime())
             ) {
+                // case 1: new booking is in middle of a free spot
                 currentBookableRoom = br;
+                this.splitBookableRoom(currentBookableRoom, event);
+                break;
+            } else if (br.getStart().isEqual(event.getBookingStartTime())) {
+                // case 2: booking is on left end
+                currentBookableRoom = br;
+                this.addBookableRoomAfter(currentBookableRoom, event);
+                break;
+            } else if (br.getEnd().isEqual(event.getBookingEndTime())) {
+                // case 3: booking is on right end
+                currentBookableRoom = br;
+                this.addBookableRoomBefore(currentBookableRoom, event);
+                break;
             }
         }
         if (null == currentBookableRoom) {
@@ -67,23 +147,5 @@ public class RoomProjector implements Observer {
             return;
         }
 
-        this.readRepository.removeBookableRoom(currentBookableRoom);
-
-        if (!currentBookableRoom.getStart().isEqual(START_OF_YEAR)) {
-            this.readRepository.addBookableRoom(new BookableRoom(
-                currentBookableRoom.getRoomNumber(),
-                START_OF_YEAR,
-                currentBookableRoom.getStart(),
-                currentBookableRoom.getCapacity()
-            ));
-        }
-        if (!currentBookableRoom.getEnd().isEqual(END_OF_YEAR)) {
-            this.readRepository.addBookableRoom(new BookableRoom(
-                currentBookableRoom.getRoomNumber(),
-                currentBookableRoom.getEnd(),
-                END_OF_YEAR,
-                currentBookableRoom.getCapacity()
-            ));
-        }
     }
 }
