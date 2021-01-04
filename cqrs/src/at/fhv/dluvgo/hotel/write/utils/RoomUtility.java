@@ -24,7 +24,6 @@ public class RoomUtility {
                 RoomBookedEvent e = (RoomBookedEvent) event;
                 if (null != room) {
                     room.addBooking(
-                        // TODO check this exception handling
                         Booking.create(
                             room,
                             e.getBookingStartTime(),

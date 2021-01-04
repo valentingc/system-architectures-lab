@@ -5,9 +5,19 @@ import at.fhv.dluvgo.hotel.read.repository.ReadRepository;
 import at.fhv.dluvgo.hotel.write.event.Event;
 import at.fhv.dluvgo.hotel.write.event.RoomBookedEvent;
 import at.fhv.dluvgo.hotel.write.event.RoomCreatedEvent;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 public class RoomProjector implements Observer {
+    private static final LocalDateTime START_OF_YEAR = LocalDate.of(2021, 1, 1).atStartOfDay();
+    private static final LocalDateTime END_OF_YEAR = LocalDate.of(
+        2021,
+        12,
+        31
+    ).atTime(LocalTime.MAX);
+
     private final ReadRepository readRepository;
 
     public RoomProjector(ReadRepository readRepository) {
@@ -26,8 +36,8 @@ public class RoomProjector implements Observer {
     private void apply(RoomCreatedEvent event) {
         this.readRepository.addBookableRoom(new BookableRoom(
             event.getId(),
-            START_OF_DAY,
-            END_OF_DAY,
+            START_OF_YEAR,
+            END_OF_YEAR,
             event.getCapacity()
         ));
     }
@@ -37,58 +47,43 @@ public class RoomProjector implements Observer {
             event.getRoomNumber()
         );
 
-        BookableRoom bookableRoom = null;
-
         if (bookableRooms.isEmpty()) {
             System.err.println(
-                "Something bad happened.. let's pretend it never happened (like Trump.. or Corona)"
+                "Something bad happened.. let's pretend it never did (like Trump.. or Corona)"
             );
-        } else if (bookableRooms.size() < 2) {
-            bookableRoom = bookableRooms.get(0);
-            this.readRepository.removeBookableRoom(bookableRoom);
-        } else {
-            for (BookableRoom br : bookableRooms) {
-                if (!br.getStart().isAfter(event.getBookingEndTime()) &&
-                    !event.getBookingStartTime().isAfter(br.getEnd())
-                ) {
-                    bookableRoom = br;
-                }
+            return;
+        }
+
+        BookableRoom currentBookableRoom = null;
+        for (BookableRoom br : bookableRooms) {
+            if (!br.getStart().isAfter(event.getBookingEndTime()) &&
+                !event.getBookingStartTime().isAfter(br.getEnd())
+            ) {
+                currentBookableRoom = br;
             }
+        }
+        if (null == currentBookableRoom) {
+            System.err.println("Something bad happened");
+            return;
+        }
 
-            // remove bookableRoom
-            BookableRoom before = null;
-            for (BookableRoom br : bookableRooms) {
-                if (br.getStart().isBefore(event.getBookingStartTime())) {
-                    before = br;
-                }
-            }
+        this.readRepository.removeBookableRoom(currentBookableRoom);
 
-            BookableRoom after = null;
-            for (BookableRoom br : bookableRooms) {
-                if (br.getStart().isAfter(event.getBookingEndTime())) {
-                    after = br;
-                    break;
-                }
-            }
-
-            this.readRepository.removeBookableRoom((bookableRoom));
-            this.readRepository.addBookableRoom(
-                new BookableRoom(
-                    bookableRoom.getRoomNumber(),
-                    before.getEnd(),
-                    event.getBookingStartTime(),
-                    bookableRoom.getCapacity()
-                )
-            );
-            this.readRepository.addBookableRoom(
-                new BookableRoom(
-                    bookableRoom.getRoomNumber(),
-                    event.getBookingEndTime(),
-                    after.getStart(),
-                    bookableRoom.getCapacity()
-                )
-            );
-
+        if (!currentBookableRoom.getStart().isEqual(START_OF_YEAR)) {
+            this.readRepository.addBookableRoom(new BookableRoom(
+                currentBookableRoom.getRoomNumber(),
+                START_OF_YEAR,
+                currentBookableRoom.getStart(),
+                currentBookableRoom.getCapacity()
+            ));
+        }
+        if (!currentBookableRoom.getEnd().isEqual(END_OF_YEAR)) {
+            this.readRepository.addBookableRoom(new BookableRoom(
+                currentBookableRoom.getRoomNumber(),
+                currentBookableRoom.getEnd(),
+                END_OF_YEAR,
+                currentBookableRoom.getCapacity()
+            ));
         }
     }
 }
