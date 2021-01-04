@@ -2,12 +2,16 @@ package at.fhv.dluvgo.hotel.read.cqrs.query;
 
 import java.time.LocalDateTime;
 
-public class GetFreeRooms {
+public class GetFreeRoomsQuery {
     private final LocalDateTime startTime;
     private final LocalDateTime endTime;
     private final int requiredRoomCapacity;
 
-    public GetFreeRooms(LocalDateTime startTime, LocalDateTime endTime, int requiredRoomCapacity) {
+    public GetFreeRoomsQuery(
+        LocalDateTime startTime,
+        LocalDateTime endTime,
+        int requiredRoomCapacity
+    ) {
         this.startTime = startTime;
         this.endTime = endTime;
         this.requiredRoomCapacity = requiredRoomCapacity;

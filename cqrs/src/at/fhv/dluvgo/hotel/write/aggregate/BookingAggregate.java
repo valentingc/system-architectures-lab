@@ -25,8 +25,7 @@ public class BookingAggregate {
         Room room = RoomUtility.recreateRoomState(eventStore, command.getRoomNumber());
 
         if (!room.isFree(command.getBookingStartTime(), command.getBookingEndTime())) {
-            // throw some bad exception that destroys everything
-            throw new Exception("Room is not free"); // TODO fix error handling
+            throw new Exception("Room is not free");
         }
 
         BookingCreatedEvent bookingCreatedEvent = new BookingCreatedEvent(
@@ -55,8 +54,7 @@ public class BookingAggregate {
         Booking booking = BookingUtility.recreateBookingState(eventStore, command.getBookingId());
 
         if (booking.getState().equals(Booking.State.CANCELLED)) {
-            // throw some bad exception that destroys everything
-            throw new Exception("Booking is already cancelled"); // TODO fix error handling
+            throw new Exception("Booking is already cancelled");
         }
 
         BookingCancelledEvent bookingCancelledEvent = new BookingCancelledEvent(
