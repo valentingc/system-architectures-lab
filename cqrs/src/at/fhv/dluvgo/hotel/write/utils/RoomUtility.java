@@ -3,6 +3,7 @@ package at.fhv.dluvgo.hotel.write.utils;
 import at.fhv.dluvgo.hotel.write.domain.Booking;
 import at.fhv.dluvgo.hotel.write.domain.PersonalDetails;
 import at.fhv.dluvgo.hotel.write.domain.Room;
+import at.fhv.dluvgo.hotel.write.event.BookingCancelledEvent;
 import at.fhv.dluvgo.hotel.write.event.Event;
 import at.fhv.dluvgo.hotel.write.event.RoomBookedEvent;
 import at.fhv.dluvgo.hotel.write.event.RoomCreatedEvent;
@@ -36,6 +37,12 @@ public class RoomUtility {
                         )
                     );
                 }
+            } else if (event instanceof BookingCancelledEvent) {
+                BookingCancelledEvent e = (BookingCancelledEvent) event;
+                room.getBookings().stream().filter(x -> x.getId().equals(e.getBookingId())).forEach(b -> {
+                    System.out.println("[WRITE] RoomUtility - cancelling booking (reconstructing)");
+                    b.cancel();
+                });
             }
         }
 

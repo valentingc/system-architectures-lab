@@ -46,14 +46,7 @@ public class Booking {
             throw new IllegalArgumentException("Start date must be before end date");
         }
 
-        if (!room.isFree(start, end, id)) {
-            throw new IllegalArgumentException("Room is already booked during this time frame");
-        }
-
-        Booking booking = new Booking(id, room, start, end, personalDetails);
-
-        //room.addBooking(booking);
-        return booking;
+        return new Booking(id, room, start, end, personalDetails);
     }
 
     /* ### Business logic ### */

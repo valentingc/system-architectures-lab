@@ -65,6 +65,7 @@ public class BookingAggregate {
             command.getBookingId()
         );
 
+        eventStore.addEvent(booking.getRoom().getRoomNumber(), bookingCancelledEvent);
         eventStore.addEvent(booking.getId(), bookingCancelledEvent);
 
         return Arrays.asList(bookingCancelledEvent);
