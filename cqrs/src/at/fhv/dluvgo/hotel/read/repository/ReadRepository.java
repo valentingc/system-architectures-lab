@@ -2,6 +2,7 @@ package at.fhv.dluvgo.hotel.read.repository;
 
 import at.fhv.dluvgo.hotel.read.domain.BookableRoom;
 import at.fhv.dluvgo.hotel.read.domain.Booking;
+import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -25,6 +26,21 @@ public class ReadRepository {
         }
         System.err.println("Booking not found");
         return null;
+    }
+    public List<Booking> getBookings(
+        LocalDateTime from,
+        LocalDateTime to
+    ) {
+        List<Booking> result = new LinkedList<>();
+        for (Booking b : this.bookings) {
+            if ((b.getStart().isEqual(from) || b.getStart().isAfter(from))
+                && (b.getEnd().isEqual(to) || b.getEnd().isBefore(to))
+            ) {
+                result.add(b);
+            }
+        }
+
+        return result;
     }
 
     public void addBooking(Booking booking) {
@@ -76,6 +92,24 @@ public class ReadRepository {
         List<BookableRoom> result = new LinkedList<>();
         for (BookableRoom br : this.bookableRooms) {
             if (br.getRoomNumber().equals(roomNumber)) {
+                result.add(br);
+            }
+        }
+
+        return result;
+    }
+
+    public List<BookableRoom> getBookableRooms(
+        int capacity,
+        LocalDateTime from,
+        LocalDateTime to
+    ) {
+        List<BookableRoom> result = new LinkedList<>();
+        for (BookableRoom br : this.bookableRooms) {
+            if (br.getCapacity() >= capacity
+                && (br.getStart().isEqual(from) || br.getStart().isBefore(from))
+                && (br.getEnd().isEqual(to) || br.getEnd().isAfter(to))
+            ) {
                 result.add(br);
             }
         }
