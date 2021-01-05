@@ -165,10 +165,18 @@ public class Main implements Runnable {
             }
 
             while (state.equals(MenuState.CANCEL)) {
-                System.out.println("$ Enter Booking ID to cancel (e.g. 375f4797-558a-4d23-a965-44553c807ea1)");
-                this.runWrite.runCommand(new CancelBookingCommand(UUID.fromString(reader.readLine())));
-                System.out.println("[CLI] Command sent successfully");
-                state = MenuState.MAIN_MENU;
+                System.out.println(
+                    "$ Enter Booking ID to cancel (e.g. 375f4797-558a-4d23-a965-44553c807ea1)");
+
+                try {
+                    this.runWrite
+                        .runCommand(new CancelBookingCommand(UUID.fromString(reader.readLine())));
+                    System.out.println("[CLI] Command sent successfully");
+                } catch (IllegalArgumentException e) {
+                    e.printStackTrace();
+                } finally {
+                    state = MenuState.MAIN_MENU;
+                };
             }
         }
     }
