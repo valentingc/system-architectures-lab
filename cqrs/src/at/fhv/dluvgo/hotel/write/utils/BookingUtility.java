@@ -15,6 +15,10 @@ public class BookingUtility {
         Booking booking = null;
         List<Event> events = store.getEvents(bookingId);
 
+        if (events == null) {
+            System.err.println("[WRITE] BookingUtility - did not find any events");
+            return null;
+        }
         for (Event event : events) {
             if (event instanceof BookingCreatedEvent) {
                 BookingCreatedEvent e = (BookingCreatedEvent) event;

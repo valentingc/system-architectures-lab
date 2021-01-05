@@ -25,10 +25,6 @@ public class BookingAggregate {
         System.out.println("[WRITE] BookingAggregate - BookRoomCommand called");
         Room room = RoomUtility.recreateRoomState(eventStore, command.getRoomNumber());
 
-        if (!room.isFree(command.getBookingStartTime(), command.getBookingEndTime())) {
-            throw new Exception("[WRITE] BookingAggregate - Room is not free");
-        }
-
         BookingCreatedEvent bookingCreatedEvent = new BookingCreatedEvent(
             room.getRoomNumber(),
             command.getBookingStartTime(),
@@ -46,8 +42,13 @@ public class BookingAggregate {
             command.getNumberOfPeople()
         );
 
+        if (!room.isFree(command.getBookingStartTime(), command.getBookingEndTime(),
+            bookingCreatedEvent.getBookingId())) {
+            throw new Exception("[WRITE] BookingAggregate - Room is not free");
+        }
+
         eventStore.addEvent(bookingCreatedEvent.getBookingId(), bookingCreatedEvent);
-        eventStore.addEvent(bookingCreatedEvent.getBookingId(), roomBookedEvent);
+        eventStore.addEvent(bookingCreatedEvent.getRoomNumber(), roomBookedEvent);
 
         return Arrays.asList(bookingCreatedEvent, roomBookedEvent);
     }
