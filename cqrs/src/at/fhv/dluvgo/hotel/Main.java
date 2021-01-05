@@ -1,16 +1,28 @@
 package at.fhv.dluvgo.hotel;
 
 import at.fhv.dluvgo.hotel.read.RunRead;
-import at.fhv.dluvgo.hotel.read.domain.BookableRoom;
+import at.fhv.dluvgo.hotel.read.cqrs.query.GetBookingsQuery;
 import at.fhv.dluvgo.hotel.read.cqrs.query.GetFreeRoomsQuery;
+import at.fhv.dluvgo.hotel.read.domain.BookableRoom;
+import at.fhv.dluvgo.hotel.read.domain.Booking;
 import at.fhv.dluvgo.hotel.write.RunWrite;
-import at.fhv.dluvgo.hotel.write.repository.EventStore;
 import at.fhv.dluvgo.hotel.write.cqrs.command.*;
+import at.fhv.dluvgo.hotel.write.repository.EventStore;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
-public class Main {
+public class Main implements Runnable {
+    private final RunWrite runWrite;
+    private final RunRead runRead;
+
+    public Main(RunWrite runWrite, RunRead runRead) {
+        this.runWrite = runWrite;
+        this.runRead = runRead;
+    }
 
     public static void main(String[] args) {
 
@@ -24,24 +36,141 @@ public class Main {
         eventStore.subscribe(rr.getBookingProjector());
         eventStore.subscribe(rr.getRoomProjector());
 
+        Main m = new Main(wt, rr);
+        Thread mainThread = new Thread(m);
+
         wtThread.start();
         rrThread.start();
+        mainThread.start();
+    }
 
-        wt.runCommand(new CreateRoomCommand(UUID.randomUUID(), 2));
+    @Override
+    public void run() {
+        // Rooms can be created by hand
 
-
-        List<BookableRoom> result = rr.runQuery(
-            new GetFreeRoomsQuery(
-                LocalDateTime.of(2021, 1,5,15,0,0),
-                LocalDateTime.of(2021, 1,8,9,0,0),
-                2
-            )
-        );
+        runWrite.runCommand(new CreateRoomCommand(UUID.randomUUID(), 1));
+        runWrite.runCommand(new CreateRoomCommand(UUID.randomUUID(), 1));
+        runWrite.runCommand(new CreateRoomCommand(UUID.randomUUID(), 2));
+        runWrite.runCommand(new CreateRoomCommand(UUID.randomUUID(), 2));
+        runWrite.runCommand(new CreateRoomCommand(UUID.randomUUID(), 2));
+        runWrite.runCommand(new CreateRoomCommand(UUID.randomUUID(), 2));
+        runWrite.runCommand(new CreateRoomCommand(UUID.randomUUID(), 3));
+        runWrite.runCommand(new CreateRoomCommand(UUID.randomUUID(), 4));
+        runWrite.runCommand(new CreateRoomCommand(UUID.randomUUID(), 4));
+        runWrite.runCommand(new CreateRoomCommand(UUID.randomUUID(), 5)); // 10 rooms
 
         try {
-            rrThread.sleep(2000);
-        } catch (InterruptedException e) {
+            this.handleCliInput();
+        } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void handleCliInput() throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        MenuState state = MenuState.MAIN_MENU;
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+
+        while (true) {
+            while (state.equals(MenuState.MAIN_MENU)) {
+                System.out.println("Welcome to the CQRS with ES HotelSystem by Valentin & Dominic");
+                System.out.println("General Checkout latest 11am, Checkin earliest 2pm, no exceptions");
+                System.out.println("1) List of free rooms");
+                System.out.println("2) List of bookings");
+                System.out.println("3) Book a room");
+                System.out.println("4) Cancel booking");
+                System.out.println("0) Quit the system");
+
+                String input = reader.readLine();
+                switch (input) {
+                    case "1":
+                        state = MenuState.FREE_ROOMS;
+                        break;
+                    case "2":
+                        state = MenuState.BOOKINGS;
+                        break;
+                    case "3":
+                        state = MenuState.BOOK;
+                        break;
+                    case "4":
+                        state = MenuState.CANCEL;
+                        break;
+                    case "0":
+                    case "quit":
+                        System.exit(0);
+                    default:
+                        System.err.println("Unknown command");
+                        break;
+                }
+            }
+
+            while (state.equals(MenuState.FREE_ROOMS)) {
+                System.out.println("Enter start date (e.g. 07-12-2021 14:00)");
+                LocalDateTime start = LocalDateTime.parse(reader.readLine(), formatter);
+                System.out.println("Enter end date (e.g. 09-12-2021 11:00)");
+                LocalDateTime end = LocalDateTime.parse(reader.readLine(), formatter);
+                System.out.println("Enter room capacity");
+                int capacity = Integer.parseInt(reader.readLine());
+
+                for (BookableRoom br : this.runRead.runQuery(new GetFreeRoomsQuery(start, end, capacity))) {
+                    System.out.println(br);
+                    System.out.println("------------------------");
+                }
+                state = MenuState.MAIN_MENU;
+            }
+            while (state.equals(MenuState.BOOKINGS)) {
+                System.out.println("Enter start date (e.g. 07-12-2021 14:00)");
+                LocalDateTime start = LocalDateTime.parse(reader.readLine(), formatter);
+                System.out.println("Enter end date (e.g. 09-12-2021 11:00)");
+                LocalDateTime end = LocalDateTime.parse(reader.readLine(), formatter);
+
+                for (Booking b : this.runRead.runQuery(new GetBookingsQuery(start, end))) {
+                    System.out.println(b);
+                    System.out.println("------------------------");
+                }
+                state = MenuState.MAIN_MENU;
+            }
+
+            while (state.equals(MenuState.BOOK)) {
+                System.out.println("Enter room number (e.g. 375f4797-558a-4d23-a965-44553c807ea1)");
+                UUID roomNumber = UUID.fromString(reader.readLine());
+                System.out.println("Enter start date (e.g. 07-12-2021 14:00");
+                LocalDateTime start = LocalDateTime.parse(reader.readLine(), formatter);
+                System.out.println("Enter end date (e.g. 09-12-2021 11:00");
+                LocalDateTime end = LocalDateTime.parse(reader.readLine(), formatter);
+                System.out.println("Enter room capacity");
+                int capacity = Integer.parseInt(reader.readLine());
+                System.out.println("Enter name");
+                String name = reader.readLine();
+
+                this.runWrite.runCommand(
+                    new BookRoomCommand(
+                        roomNumber,
+                        start,
+                        end,
+                        name,
+                        capacity
+                    )
+                );
+                System.out.println("Command sent successfully");
+                state = MenuState.MAIN_MENU;
+            }
+
+            while (state.equals(MenuState.CANCEL)) {
+                System.out.println("Enter Booking ID to cancel (e.g. 375f4797-558a-4d23-a965-44553c807ea1)");
+                this.runWrite.runCommand(new CancelBookingCommand(UUID.fromString(reader.readLine())));
+                System.out.println("Command sent successfully");
+                state = MenuState.MAIN_MENU;
+            }
+        }
+    }
+
+    private enum MenuState {
+        MAIN_MENU,
+        FREE_ROOMS,
+        BOOKINGS,
+        CANCEL,
+        BOOK
     }
 }
