@@ -34,7 +34,13 @@ public class BookingUtility {
                 );
             } else if (event instanceof BookingCancelledEvent) {
                 if (null != booking) {
+                    UUID bId = booking.getId();
                     booking.cancel();
+                    booking.getRoom().getBookings().forEach(b -> {
+                        if (b.getId().equals(bId)) {
+                            b.cancel();
+                        }
+                    });
                 }
             }
         }
