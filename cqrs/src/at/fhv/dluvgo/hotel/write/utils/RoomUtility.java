@@ -25,6 +25,7 @@ public class RoomUtility {
                 if (null != room) {
                     room.addBooking(
                         Booking.create(
+                            e.getBookingId(),
                             room,
                             e.getBookingStartTime(),
                             e.getBookingEndTime(),

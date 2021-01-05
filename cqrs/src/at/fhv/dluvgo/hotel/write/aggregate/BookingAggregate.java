@@ -38,6 +38,7 @@ public class BookingAggregate {
         );
 
         RoomBookedEvent roomBookedEvent = new RoomBookedEvent(
+            bookingCreatedEvent.getBookingId(),
             command.getRoomNumber(),
             command.getBookingStartTime(),
             command.getBookingEndTime(),
@@ -45,8 +46,8 @@ public class BookingAggregate {
             command.getNumberOfPeople()
         );
 
-        eventStore.addEvent(room.getRoomNumber(), bookingCreatedEvent);
-        eventStore.addEvent(room.getRoomNumber(), roomBookedEvent);
+        eventStore.addEvent(bookingCreatedEvent.getBookingId(), bookingCreatedEvent);
+        eventStore.addEvent(bookingCreatedEvent.getBookingId(), roomBookedEvent);
 
         return Arrays.asList(bookingCreatedEvent, roomBookedEvent);
     }

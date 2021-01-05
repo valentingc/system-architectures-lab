@@ -19,6 +19,7 @@ public class BookingUtility {
             if (event instanceof BookingCreatedEvent) {
                 BookingCreatedEvent e = (BookingCreatedEvent) event;
                 booking = Booking.create(
+                    e.getBookingId(),
                     RoomUtility.recreateRoomState(store, e.getRoomNumber()),
                         e.getStart(),
                         e.getEnd(),

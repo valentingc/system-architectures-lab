@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 public class RoomBookedEvent extends Event {
+    private final UUID bookingId;
     private final UUID roomNumber;
     private final LocalDateTime bookingStartTime;
     private final LocalDateTime bookingEndTime;
@@ -11,17 +12,23 @@ public class RoomBookedEvent extends Event {
     private final int numberOfPeople;
 
     public RoomBookedEvent(
+        UUID bookingId,
         UUID roomNumber,
         LocalDateTime bookingStartTime,
         LocalDateTime bookingEndTime,
         String contactName,
         int numberOfPeople
     ) {
+        this.bookingId = bookingId;
         this.roomNumber = roomNumber;
         this.bookingStartTime = bookingStartTime;
         this.bookingEndTime = bookingEndTime;
         this.contactName = contactName;
         this.numberOfPeople = numberOfPeople;
+    }
+
+    public UUID getBookingId() {
+        return bookingId;
     }
 
     public UUID getRoomNumber() {

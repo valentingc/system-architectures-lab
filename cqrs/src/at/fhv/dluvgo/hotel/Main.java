@@ -135,11 +135,11 @@ public class Main implements Runnable {
             while (state.equals(MenuState.BOOK)) {
                 System.out.println("Enter room number (e.g. 375f4797-558a-4d23-a965-44553c807ea1)");
                 UUID roomNumber = UUID.fromString(reader.readLine());
-                System.out.println("Enter start date (e.g. 07-12-2021 14:00");
+                System.out.println("Enter start date (e.g. 07-12-2021 14:00)");
                 LocalDateTime start = LocalDateTime.parse(reader.readLine(), formatter);
-                System.out.println("Enter end date (e.g. 09-12-2021 11:00");
+                System.out.println("Enter end date (e.g. 09-12-2021 11:00)");
                 LocalDateTime end = LocalDateTime.parse(reader.readLine(), formatter);
-                System.out.println("Enter room capacity");
+                System.out.println("Enter required capacity");
                 int capacity = Integer.parseInt(reader.readLine());
                 System.out.println("Enter name");
                 String name = reader.readLine();
