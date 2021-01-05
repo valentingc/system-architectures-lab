@@ -100,19 +100,20 @@ public class Main implements Runnable {
                     case "quit":
                         System.exit(0);
                     default:
-                        System.err.println("Unknown command");
+                        System.err.println("[CLI] Unknown command");
                         break;
                 }
             }
 
             while (state.equals(MenuState.FREE_ROOMS)) {
-                System.out.println("Enter start date (e.g. 07-12-2021 14:00)");
+                System.out.println("$ Enter start date (e.g. 07-12-2021 14:00)");
                 LocalDateTime start = LocalDateTime.parse(reader.readLine(), formatter);
-                System.out.println("Enter end date (e.g. 09-12-2021 11:00)");
+                System.out.println("$ Enter end date (e.g. 09-12-2021 11:00)");
                 LocalDateTime end = LocalDateTime.parse(reader.readLine(), formatter);
-                System.out.println("Enter room capacity");
+                System.out.println("$ Enter room capacity");
                 int capacity = Integer.parseInt(reader.readLine());
 
+                System.out.println("------------------------");
                 for (BookableRoom br : this.runRead.runQuery(new GetFreeRoomsQuery(start, end, capacity))) {
                     System.out.println(br);
                     System.out.println("------------------------");
@@ -120,11 +121,12 @@ public class Main implements Runnable {
                 state = MenuState.MAIN_MENU;
             }
             while (state.equals(MenuState.BOOKINGS)) {
-                System.out.println("Enter start date (e.g. 07-12-2021 14:00)");
+                System.out.println("$ Enter start date (e.g. 07-12-2021 14:00)");
                 LocalDateTime start = LocalDateTime.parse(reader.readLine(), formatter);
-                System.out.println("Enter end date (e.g. 09-12-2021 11:00)");
+                System.out.println("$ Enter end date (e.g. 09-12-2021 11:00)");
                 LocalDateTime end = LocalDateTime.parse(reader.readLine(), formatter);
 
+                System.out.println("------------------------");
                 for (Booking b : this.runRead.runQuery(new GetBookingsQuery(start, end))) {
                     System.out.println(b);
                     System.out.println("------------------------");
@@ -133,15 +135,15 @@ public class Main implements Runnable {
             }
 
             while (state.equals(MenuState.BOOK)) {
-                System.out.println("Enter room number (e.g. 375f4797-558a-4d23-a965-44553c807ea1)");
+                System.out.println("$ Enter room number (e.g. 375f4797-558a-4d23-a965-44553c807ea1)");
                 UUID roomNumber = UUID.fromString(reader.readLine());
-                System.out.println("Enter start date (e.g. 07-12-2021 14:00)");
+                System.out.println("$ Enter start date (e.g. 07-12-2021 14:00)");
                 LocalDateTime start = LocalDateTime.parse(reader.readLine(), formatter);
-                System.out.println("Enter end date (e.g. 09-12-2021 11:00)");
+                System.out.println("$ Enter end date (e.g. 09-12-2021 11:00)");
                 LocalDateTime end = LocalDateTime.parse(reader.readLine(), formatter);
-                System.out.println("Enter required capacity");
+                System.out.println("$ Enter required capacity");
                 int capacity = Integer.parseInt(reader.readLine());
-                System.out.println("Enter name");
+                System.out.println("$ Enter name");
                 String name = reader.readLine();
 
                 this.runWrite.runCommand(
@@ -153,14 +155,14 @@ public class Main implements Runnable {
                         capacity
                     )
                 );
-                System.out.println("Command sent successfully");
+                System.out.println("[CLI] Command sent successfully");
                 state = MenuState.MAIN_MENU;
             }
 
             while (state.equals(MenuState.CANCEL)) {
-                System.out.println("Enter Booking ID to cancel (e.g. 375f4797-558a-4d23-a965-44553c807ea1)");
+                System.out.println("$ Enter Booking ID to cancel (e.g. 375f4797-558a-4d23-a965-44553c807ea1)");
                 this.runWrite.runCommand(new CancelBookingCommand(UUID.fromString(reader.readLine())));
-                System.out.println("Command sent successfully");
+                System.out.println("[CLI] Command sent successfully");
                 state = MenuState.MAIN_MENU;
             }
         }

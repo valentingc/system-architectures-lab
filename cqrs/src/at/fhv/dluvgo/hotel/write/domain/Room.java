@@ -23,10 +23,11 @@ public class Room {
 
     /* ### Business logic ### */
 
-    public boolean isFree(LocalDateTime start, LocalDateTime end) {
+    public boolean isFree(LocalDateTime start, LocalDateTime end, UUID bookingId) {
         for (Booking booking : bookings) {
-            if (booking.getState().equals(Booking.State.ACTIVE) &&
-                booking.getStart().isBefore(end) && start.isBefore(booking.getEnd())
+            if (!booking.getId().equals(bookingId)
+                && booking.getState().equals(Booking.State.ACTIVE) &&
+                !booking.getStart().isAfter(end) && !start.isAfter(booking.getEnd())
             ) {
                 return false;
             }
