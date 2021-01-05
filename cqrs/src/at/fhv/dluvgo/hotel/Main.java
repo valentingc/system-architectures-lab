@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.UUID;
 
 public class Main implements Runnable {
@@ -114,7 +115,9 @@ public class Main implements Runnable {
                 int capacity = Integer.parseInt(reader.readLine());
 
                 System.out.println("------------------------");
-                for (BookableRoom br : this.runRead.runQuery(new GetFreeRoomsQuery(start, end, capacity))) {
+                List<BookableRoom> result = this.runRead.runQuery(new GetFreeRoomsQuery(start, end, capacity));
+                System.out.println(String.format("## Found %s bookable rooms", result.size()));
+                for (BookableRoom br : result) {
                     System.out.println(br);
                     System.out.println("------------------------");
                 }
@@ -127,7 +130,9 @@ public class Main implements Runnable {
                 LocalDateTime end = LocalDateTime.parse(reader.readLine(), formatter);
 
                 System.out.println("------------------------");
-                for (Booking b : this.runRead.runQuery(new GetBookingsQuery(start, end))) {
+                List<Booking> result = this.runRead.runQuery(new GetBookingsQuery(start, end));
+                System.out.println(String.format("## Found %s bookings", result.size()));
+                for (Booking b : result) {
                     System.out.println(b);
                     System.out.println("------------------------");
                 }
