@@ -27,6 +27,7 @@ public class RoomProjector implements Observer {
 
     @Override
     public void update(Event event) {
+        System.out.println("[READ] BookingProjector - called");
         if (event instanceof RoomCreatedEvent) {
             this.apply((RoomCreatedEvent) event);
         } else if (event instanceof RoomBookedEvent) {
@@ -149,7 +150,7 @@ public class RoomProjector implements Observer {
 
         if (bookableRooms.isEmpty()) {
             System.err.println(
-                "Something bad happened.. let's pretend it never did (like Trump.. or Corona)"
+                "[READ] BookingProjector - Something bad happened.. let's pretend it never did (like Trump.. or Corona)"
             );
             return;
         }
@@ -176,7 +177,7 @@ public class RoomProjector implements Observer {
             }
         }
         if (null == currentBookableRoom) {
-            System.err.println("Something bad happened while handling a [RoomBooked] event");
+            System.err.println("[READ] BookingProjector - Something bad happened while handling a [RoomBooked] event");
         }
     }
 }

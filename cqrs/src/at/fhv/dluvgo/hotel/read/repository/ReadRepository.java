@@ -24,9 +24,10 @@ public class ReadRepository {
                 return b;
             }
         }
-        System.err.println("Booking not found");
+        System.err.println("[READ] ReadRepository - Booking not found");
         return null;
     }
+
     public List<Booking> getBookings(
         LocalDateTime from,
         LocalDateTime to
@@ -48,7 +49,7 @@ public class ReadRepository {
             this.updateBooking(booking);
         }
         this.bookings.add(booking);
-        System.out.println("Added booking");
+        System.out.println("[READ] ReadRepository - Added booking");
     }
 
     public void addBookings(Booking... bookings) {
@@ -69,7 +70,8 @@ public class ReadRepository {
 
         if (null == bookingToUpdate) {
             // something went utterly wrong - AND THUS.. we simply add it
-            System.err.println("Booking to update not found. Fixing: adding a new booking");
+            System.err.println(
+                "[READ] ReadRepository - Booking to update not found. Fixing: adding a new booking");
             this.addBooking(booking);
             return;
         }
@@ -78,12 +80,12 @@ public class ReadRepository {
 
         this.bookings.remove(bookingToUpdate);
         this.bookings.add(newBooking);
-        System.out.println("Updated booking");
+        System.out.println("[READ] ReadRepository - Updated booking");
     }
 
     public void removeBooking(Booking booking) {
         this.bookings.remove(booking);
-        System.out.println("Removed booking");
+        System.out.println("[READ] ReadRepository - Removed booking");
     }
 
     /* ### BookableRoom ### */
@@ -119,12 +121,13 @@ public class ReadRepository {
 
     public void addBookableRoom(BookableRoom bookableRoom) {
         if (this.bookableRooms.contains(bookableRoom)) {
-            System.err.println("Bookable room already saved in ReadRepository.");
+            System.err
+                .println("[READ] ReadRepository - Bookable room already saved in ReadRepository.");
             return;
         }
 
         this.bookableRooms.add(bookableRoom);
-        System.out.println("Added bookable Room");
+        System.out.println("[READ] ReadRepository - Added bookable room");
     }
 
     public void addBookableRooms(BookableRoom... bookableRooms) {
@@ -135,6 +138,6 @@ public class ReadRepository {
 
     public void removeBookableRoom(BookableRoom bookableRoom) {
         this.bookableRooms.remove(bookableRoom);
-        System.out.println("Removed bookable room");
+        System.out.println("[READ] ReadRepository - Removed bookable room");
     }
 }

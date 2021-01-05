@@ -22,10 +22,11 @@ public class BookingAggregate {
     }
 
     public List<Event> handleBookRoomCommand(BookRoomCommand command) throws Exception {
+        System.out.println("[WRITE] BookingAggregate - BookRoomCommand called");
         Room room = RoomUtility.recreateRoomState(eventStore, command.getRoomNumber());
 
         if (!room.isFree(command.getBookingStartTime(), command.getBookingEndTime())) {
-            throw new Exception("Room is not free");
+            throw new Exception("[WRITE] BookingAggregate - Room is not free");
         }
 
         BookingCreatedEvent bookingCreatedEvent = new BookingCreatedEvent(
@@ -51,10 +52,11 @@ public class BookingAggregate {
     }
 
     public List<Event> handleCancelBookingCommand(CancelBookingCommand command) throws Exception {
+        System.out.println("[WRITE] BookingAggregate - CancelBookingCommand called");
         Booking booking = BookingUtility.recreateBookingState(eventStore, command.getBookingId());
 
         if (booking.getState().equals(Booking.State.CANCELLED)) {
-            throw new Exception("Booking is already cancelled");
+            throw new Exception("[WRITE] BookingAggregate - Booking is already cancelled");
         }
 
         BookingCancelledEvent bookingCancelledEvent = new BookingCancelledEvent(

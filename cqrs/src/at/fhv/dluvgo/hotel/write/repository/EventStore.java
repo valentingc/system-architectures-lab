@@ -14,6 +14,7 @@ public class EventStore implements Observable {
     private final Map<UUID, List<Event>> store = new HashMap<>();
 
     public void addEvent(UUID id, Event event) {
+        System.out.println("[WRITE] EventStore - Adding event to EventStore");
         List<Event> events = store.get(id);
         if (events == null) {
             events = new ArrayList<>();
@@ -34,6 +35,7 @@ public class EventStore implements Observable {
 
     @Override
     public void subscribe(Observer observer) {
+        System.out.println("[WRITE] EventStore - new subscriber");
         if (!observerList.contains(observer)) {
             observerList.add(observer);
         }
