@@ -33,4 +33,12 @@ public class BookableRoom {
     public int getCapacity() {
         return capacity;
     }
+
+    @Override
+    public String toString() {
+        return "[RoomNumber] " + roomNumber + "\n" +
+            "[Start] " + start + "\n" +
+            "[End] " + end + "\n" +
+            "[Capacity] " + capacity;
+    }
 }

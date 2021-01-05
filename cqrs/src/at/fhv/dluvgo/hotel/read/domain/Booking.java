@@ -85,6 +85,16 @@ public class Booking {
     /* ### General ### */
 
     @Override
+    public String toString() {
+        return "[BookingId] " + id + "\n" +
+            "[RoomNumber] " + roomNumber + "\n" +
+            "[Start] " + start + "\n" +
+            "[End] " + end + "\n" +
+            "[BookedBy] " + bookingMadeBy + "\n" +
+            "[People] " + numberOfPeople;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;

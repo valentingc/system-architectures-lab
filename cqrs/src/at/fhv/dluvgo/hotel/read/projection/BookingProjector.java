@@ -101,6 +101,7 @@ public class BookingProjector implements Observer {
         BookableRoom rightBookableRoom,
         Booking cancelledBooking
     ) {
+        System.out.println("[READ] BookingProjector - uniting two separate BookableRooms");
         this.readRepository.removeBookableRoom(leftBookableRoom);
         this.readRepository.removeBookableRoom(rightBookableRoom);
         this.readRepository.addBookableRoom(new BookableRoom(
@@ -121,6 +122,7 @@ public class BookingProjector implements Observer {
         BookableRoom currentBookableRoom,
         Booking currentBooking
     ) {
+        System.out.println("[READ] BookingProjector - extending BookableRoom to the left");
         this.readRepository.removeBookableRoom(currentBookableRoom);
         this.readRepository.addBookableRoom(new BookableRoom(
             currentBooking.getRoomNumber(),
@@ -140,6 +142,7 @@ public class BookingProjector implements Observer {
         BookableRoom currentBookableRoom,
         Booking currentBooking
     ) {
+        System.out.println("[READ] BookingProjector - extending BookableRoom to the right");
         this.readRepository.removeBookableRoom(currentBookableRoom);
         this.readRepository.addBookableRoom(new BookableRoom(
             currentBooking.getRoomNumber(),
