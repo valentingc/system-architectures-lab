@@ -40,7 +40,6 @@ public class BookingProjector implements Observer {
     private void apply(BookingCancelledEvent event) {
         Booking bookingToUpdate = this.readRepository.getBooking(event.getBookingId());
         bookingToUpdate.setState(Booking.State.CANCELLED);
-        this.readRepository.removeBooking(bookingToUpdate);
 
         // same logic as in roomprojector
         List<BookableRoom> bookableRooms = this.readRepository.getBookableRooms(
@@ -94,6 +93,8 @@ public class BookingProjector implements Observer {
                 return;
             }
         }
+
+        this.readRepository.removeBooking(bookingToUpdate);
     }
 
     private void uniteBookableRoom(
