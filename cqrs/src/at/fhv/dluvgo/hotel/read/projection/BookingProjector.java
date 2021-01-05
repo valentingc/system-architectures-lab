@@ -70,6 +70,7 @@ public class BookingProjector implements Observer {
 
             if (leftBookableRoom != null && rightBookableRoom != null) {
                 this.uniteBookableRoom(leftBookableRoom, rightBookableRoom, bookingToUpdate);
+                this.readRepository.removeBooking(bookingToUpdate);
                 return;
             }
         }
@@ -80,6 +81,7 @@ public class BookingProjector implements Observer {
                 && br.getStart().isAfter(bookingToUpdate.getEnd())) {
                 // Case 2
                 this.extendBookableRoomLeft(br, bookingToUpdate);
+                this.readRepository.removeBooking(bookingToUpdate);
                 return;
             }
         }
@@ -90,11 +92,10 @@ public class BookingProjector implements Observer {
                 && br.getEnd().isBefore(bookingToUpdate.getStart())) {
                 // Case
                 this.extendBookableRoomRight(br, bookingToUpdate);
+                this.readRepository.removeBooking(bookingToUpdate);
                 return;
             }
         }
-
-        this.readRepository.removeBooking(bookingToUpdate);
     }
 
     private void uniteBookableRoom(

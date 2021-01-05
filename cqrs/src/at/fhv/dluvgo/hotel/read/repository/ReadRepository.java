@@ -71,7 +71,8 @@ public class ReadRepository {
         if (null == bookingToUpdate) {
             // something went utterly wrong - AND THUS.. we simply add it
             System.err.println(
-                "[READ] ReadRepository - Booking to update not found. Fixing: adding a new booking");
+                "[READ] ReadRepository - Booking to update not found. Fixing: adding a new booking"
+            );
             this.addBooking(booking);
             return;
         }
