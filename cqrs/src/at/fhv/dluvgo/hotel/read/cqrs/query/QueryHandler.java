@@ -16,6 +16,7 @@ public class QueryHandler implements GetBookingsQueryable, GetFreeRoomsQueryable
 
     @Override
     public List<Booking> handle(GetBookingsQuery query) {
+        System.out.println("[READ] QueryHandler - GetBookingsQuery query called");
         return this.readRepository.getBookings(
             query.getStartTime(),
             query.getEndTime()
@@ -24,9 +25,10 @@ public class QueryHandler implements GetBookingsQueryable, GetFreeRoomsQueryable
 
     @Override
     public List<BookableRoom> handle(GetFreeRoomsQuery query) {
+        System.out.println("[READ] QueryHandler - GetFreeRoomsQuery query called");
         LocalDateTime start = query.getStartTime();
         if (query.getStartTime().getHour() <= (RoomProjector.CHECKIN_HOUR)) {
-            System.out.println("You need another additional night before");
+            System.out.println("[READ] QueryHandler - You need another additional night before");
             start = query.getStartTime()
                 .minusDays(1)
                 .withHour(RoomProjector.CHECKIN_HOUR)
@@ -36,7 +38,7 @@ public class QueryHandler implements GetBookingsQueryable, GetFreeRoomsQueryable
 
         LocalDateTime end = query.getEndTime();
         if (query.getEndTime().getHour() >= (RoomProjector.CHECKOUT_HOUR)) {
-            System.out.println("You need another additional night after");
+            System.out.println("[READ] QueryHandler - You need another additional night after");
             end = query.getEndTime()
                 .plusDays(1)
                 .withHour(RoomProjector.CHECKOUT_HOUR)

@@ -17,6 +17,7 @@ public class BookingProjector implements Observer {
 
     @Override
     public void update(Event event) {
+        System.out.println("[READ] BookingProjector - called");
         if (event instanceof BookingCreatedEvent) {
             this.apply((BookingCreatedEvent) event);
         } else if (event instanceof BookingCancelledEvent) {
@@ -48,7 +49,7 @@ public class BookingProjector implements Observer {
 
         if (bookableRooms.isEmpty()) {
             System.err.println(
-                "Something bad happened.. let's pretend it never did (like Trump.. or Corona)"
+                "[READ] BookingProjector - Something bad happened.. let's pretend it never did (like Trump.. or Corona)"
             );
             return;
         }
