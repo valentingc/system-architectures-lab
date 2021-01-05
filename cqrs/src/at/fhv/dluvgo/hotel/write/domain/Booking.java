@@ -17,12 +17,13 @@ public class Booking {
     private State state;
 
     private Booking(
+        UUID id,
         Room room,
         LocalDateTime start,
         LocalDateTime end,
         PersonalDetails personalDetails
     ) {
-        this.id = UUID.randomUUID();
+        this.id = id;
         this.room = room;
         this.start = start;
         this.end = end;
@@ -31,6 +32,7 @@ public class Booking {
     }
 
     public static Booking create(
+        UUID id,
         Room room,
         LocalDateTime start,
         LocalDateTime end,
@@ -48,7 +50,7 @@ public class Booking {
             throw new IllegalArgumentException("Room is already booked during this time frame");
         }
 
-        Booking booking = new Booking(room, start, end, personalDetails);
+        Booking booking = new Booking(id, room, start, end, personalDetails);
 
         room.addBooking(booking);
         return booking;

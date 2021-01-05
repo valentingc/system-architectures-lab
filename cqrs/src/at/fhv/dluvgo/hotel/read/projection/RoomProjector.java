@@ -37,7 +37,7 @@ public class RoomProjector implements Observer {
 
     private void apply(RoomCreatedEvent event) {
         this.readRepository.addBookableRoom(new BookableRoom(
-            event.getId(),
+            event.getRoomNumber(),
             START_OF_YEAR,
             END_OF_YEAR,
             event.getCapacity()
