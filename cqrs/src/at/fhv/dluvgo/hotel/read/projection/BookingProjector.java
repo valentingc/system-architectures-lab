@@ -80,7 +80,7 @@ public class BookingProjector implements Observer {
             if (br.getStart().getDayOfMonth() == bookingToUpdate.getEnd().getDayOfMonth()
                 && br.getStart().isAfter(bookingToUpdate.getEnd())) {
                 // Case 2
-                this.extendBookableRoomLeft(br, bookingToUpdate);
+                this.extendBookableRoomRight(br, bookingToUpdate);
                 this.readRepository.removeBooking(bookingToUpdate);
                 return;
             }
@@ -91,7 +91,8 @@ public class BookingProjector implements Observer {
             if (br.getEnd().getDayOfMonth() == bookingToUpdate.getStart().getDayOfMonth()
                 && br.getEnd().isBefore(bookingToUpdate.getStart())) {
                 // Case
-                this.extendBookableRoomRight(br, bookingToUpdate);
+
+                this.extendBookableRoomLeft(br, bookingToUpdate);
                 this.readRepository.removeBooking(bookingToUpdate);
                 return;
             }

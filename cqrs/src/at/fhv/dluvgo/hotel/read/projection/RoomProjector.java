@@ -46,15 +46,17 @@ public class RoomProjector implements Observer {
 
     private void splitBookableRoom(BookableRoom room, RoomBookedEvent event) {
         System.out.println("[READ] RoomProjector - splitting a BookableRoom");
-        this.readRepository.addBookableRoom(new BookableRoom(
-            room.getRoomNumber(),
-            room.getStart()
-                .withHour(CHECKIN_HOUR)
-                .withMinute(0)
-                .withSecond(0),
-            event.getBookingStartTime().toLocalDate().atTime(CHECKOUT_HOUR, 0),
-            room.getCapacity()
-        ));
+        if (room.getStart().getDayOfMonth() != event.getBookingStartTime().getDayOfMonth()) {
+            this.readRepository.addBookableRoom(new BookableRoom(
+                room.getRoomNumber(),
+                room.getStart()
+                    .withHour(CHECKIN_HOUR)
+                    .withMinute(0)
+                    .withSecond(0),
+                event.getBookingStartTime().toLocalDate().atTime(CHECKOUT_HOUR, 0),
+                room.getCapacity()
+            ));
+        }
 
         if (event.getBookingEndTime().getHour() > CHECKOUT_HOUR) {
             this.readRepository.addBookableRoom(new BookableRoom(
