@@ -196,6 +196,9 @@ public class Main implements Runnable {
 
             while (state.equals(MenuState.CANCEL)) {
                 try {
+                    System.out.println(
+                        "$ Enter Booking ID to cancel (e.g. 375f4797-558a-4d23-a965-44553c807ea1)"
+                    );
                     this.runWrite.runCommand(new CancelBookingCommand(
                         UUID.fromString(reader.readLine())
                     ));
