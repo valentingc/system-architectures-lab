@@ -28,9 +28,15 @@ public class EventStore implements Observable {
             events.add(event);
         }
 
-        for (Observer observer : observerList) {
-            observer.update(event);
-        }
+        Runnable runnable = () -> {
+            for (Observer observer : observerList) {
+                observer.update(event);
+            }
+        };
+        System.out.println("[WRITE] EventStore - notifying observers in separate Thread");
+        Thread t = new Thread(runnable);
+        t.start();
+
     }
 
     public List<Event> getEvents(UUID id) {
