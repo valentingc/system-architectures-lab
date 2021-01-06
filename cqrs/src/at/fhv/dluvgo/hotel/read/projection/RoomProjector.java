@@ -7,18 +7,17 @@ import at.fhv.dluvgo.hotel.write.event.RoomBookedEvent;
 import at.fhv.dluvgo.hotel.write.event.RoomCreatedEvent;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 
 public class RoomProjector implements Observer {
     public static final int CHECKIN_HOUR = 14;
     public static final int CHECKOUT_HOUR = 11;
-    private static final LocalDateTime START_OF_YEAR = LocalDate.of(2021, 1, 1).atStartOfDay();
-    private static final LocalDateTime END_OF_YEAR = LocalDate.of(
-        2021,
-        12,
-        31
-    ).atTime(LocalTime.MAX);
+    private static final LocalDateTime START_OF_YEAR = LocalDate
+        .of(2021, 1, 1)
+        .atTime(CHECKIN_HOUR, 0, 0);
+    private static final LocalDateTime END_OF_YEAR = LocalDate
+        .of(2021, 12, 31)
+        .atTime(CHECKOUT_HOUR, 0, 0);
     private final ReadRepository readRepository;
 
     public RoomProjector(ReadRepository readRepository) {
@@ -183,7 +182,9 @@ public class RoomProjector implements Observer {
             }
         }
         if (null == currentBookableRoom) {
-            System.err.println("[READ] RoomProjector - Something bad happened while handling a [RoomBooked] event");
+            System.err.println(
+                "[READ] RoomProjector - Something bad happened while handling a [RoomBooked] event"
+            );
         }
     }
 }

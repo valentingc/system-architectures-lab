@@ -28,7 +28,7 @@ public class QueryHandler implements GetBookingsQueryable, GetFreeRoomsQueryable
         System.out.println("[READ] QueryHandler - GetFreeRoomsQuery query called");
         LocalDateTime start = query.getStartTime();
         if (query.getStartTime().getHour() < (RoomProjector.CHECKIN_HOUR)) {
-            System.out.println("[READ] QueryHandler - Start time of query is before checking hour"
+            System.out.println("[READ] QueryHandler - Start time of query is before checkin "
                 + "hour (11am). Query results include another additional night before " +
                 "your entered starting date. Thanks for your understanding :-)");
             start = query.getStartTime()

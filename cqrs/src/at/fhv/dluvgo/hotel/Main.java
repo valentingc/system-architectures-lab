@@ -6,7 +6,9 @@ import at.fhv.dluvgo.hotel.read.cqrs.query.GetFreeRoomsQuery;
 import at.fhv.dluvgo.hotel.read.domain.BookableRoom;
 import at.fhv.dluvgo.hotel.read.domain.Booking;
 import at.fhv.dluvgo.hotel.write.RunWrite;
-import at.fhv.dluvgo.hotel.write.cqrs.command.*;
+import at.fhv.dluvgo.hotel.write.cqrs.command.BookRoomCommand;
+import at.fhv.dluvgo.hotel.write.cqrs.command.CancelBookingCommand;
+import at.fhv.dluvgo.hotel.write.cqrs.command.CreateRoomCommand;
 import at.fhv.dluvgo.hotel.write.repository.EventStore;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -47,8 +49,7 @@ public class Main implements Runnable {
 
     @Override
     public void run() {
-        // Rooms can be created by hand
-
+        // Rooms created by hand
         runWrite.runCommand(new CreateRoomCommand(UUID.randomUUID(), 1));
         runWrite.runCommand(new CreateRoomCommand(UUID.randomUUID(), 1));
         runWrite.runCommand(new CreateRoomCommand(UUID.randomUUID(), 2));
@@ -76,7 +77,9 @@ public class Main implements Runnable {
         while (true) {
             while (state.equals(MenuState.MAIN_MENU)) {
                 System.out.println("Welcome to the CQRS with ES HotelSystem by Valentin & Dominic");
-                System.out.println("General Checkout latest 11am, Checkin earliest 2pm, no exceptions");
+                System.out.println(
+                    "General Checkout latest 11am, Checkin earliest 2pm, no exceptions"
+                );
                 System.out.println("1) List of free rooms");
                 System.out.println("2) List of bookings");
                 System.out.println("3) Book a room");
@@ -107,76 +110,104 @@ public class Main implements Runnable {
             }
 
             while (state.equals(MenuState.FREE_ROOMS)) {
-                System.out.println("$ Enter start date (e.g. 07-12-2021 14:00)");
-                LocalDateTime start = LocalDateTime.parse(reader.readLine(), formatter);
-                System.out.println("$ Enter end date (e.g. 09-12-2021 11:00)");
-                LocalDateTime end = LocalDateTime.parse(reader.readLine(), formatter);
-                System.out.println("$ Enter room capacity");
-                int capacity = Integer.parseInt(reader.readLine());
-
-                System.out.println("------------------------");
-                List<BookableRoom> result = this.runRead.runQuery(new GetFreeRoomsQuery(start, end, capacity));
-                System.out.println(String.format("## Found %s bookable rooms", result.size()));
-                for (BookableRoom br : result) {
-                    System.out.println(br);
-                    System.out.println("------------------------");
-                }
-                state = MenuState.MAIN_MENU;
-            }
-            while (state.equals(MenuState.BOOKINGS)) {
-                System.out.println("$ Enter start date (e.g. 07-12-2021 14:00)");
-                LocalDateTime start = LocalDateTime.parse(reader.readLine(), formatter);
-                System.out.println("$ Enter end date (e.g. 09-12-2021 11:00)");
-                LocalDateTime end = LocalDateTime.parse(reader.readLine(), formatter);
-
-                System.out.println("------------------------");
-                List<Booking> result = this.runRead.runQuery(new GetBookingsQuery(start, end));
-                System.out.println(String.format("## Found %s bookings", result.size()));
-                for (Booking b : result) {
-                    System.out.println(b);
-                    System.out.println("------------------------");
-                }
-                state = MenuState.MAIN_MENU;
-            }
-
-            while (state.equals(MenuState.BOOK)) {
-                System.out.println("$ Enter room number (e.g. 375f4797-558a-4d23-a965-44553c807ea1)");
-                UUID roomNumber = UUID.fromString(reader.readLine());
-                System.out.println("$ Enter start date (e.g. 07-12-2021 14:00)");
-                LocalDateTime start = LocalDateTime.parse(reader.readLine(), formatter);
-                System.out.println("$ Enter end date (e.g. 09-12-2021 11:00)");
-                LocalDateTime end = LocalDateTime.parse(reader.readLine(), formatter);
-                System.out.println("$ Enter required capacity");
-                int capacity = Integer.parseInt(reader.readLine());
-                System.out.println("$ Enter name");
-                String name = reader.readLine();
-
-                this.runWrite.runCommand(
-                    new BookRoomCommand(
-                        roomNumber,
-                        start,
-                        end,
-                        name,
-                        capacity
-                    )
-                );
-                System.out.println("[CLI] Command sent successfully");
-                state = MenuState.MAIN_MENU;
-            }
-
-            while (state.equals(MenuState.CANCEL)) {
-                System.out.println(
-                    "$ Enter Booking ID to cancel (e.g. 375f4797-558a-4d23-a965-44553c807ea1)");
-
                 try {
-                    this.runWrite
-                        .runCommand(new CancelBookingCommand(UUID.fromString(reader.readLine())));
-                    System.out.println("[CLI] Command sent successfully");
-                } catch (IllegalArgumentException e) {
+                    System.out.println("$ Enter start date (e.g. 07-12-2021 14:00)");
+                    LocalDateTime start = LocalDateTime.parse(reader.readLine(), formatter);
+                    System.out.println("$ Enter end date (e.g. 09-12-2021 11:00)");
+                    LocalDateTime end = LocalDateTime.parse(reader.readLine(), formatter);
+                    System.out.println("$ Enter room capacity");
+                    int capacity = Integer.parseInt(reader.readLine());
+
+                    System.out.println("------------------------");
+                    List<BookableRoom> result = this.runRead.runQuery(
+                        new GetFreeRoomsQuery(start, end, capacity)
+                    );
+                    System.out.printf("## Found %s bookable rooms%n", result.size());
+                    for (BookableRoom br : result) {
+                        System.out.println(br);
+                        System.out.println("------------------------");
+                    }
+                } catch (Exception e) {
+                    System.err.println(
+                        "[CLI] Something went wrong - see exception. Returning to main menu"
+                    );
                     e.printStackTrace();
                 } finally {
                     state = MenuState.MAIN_MENU;
-                };
+                }
+            }
+            while (state.equals(MenuState.BOOKINGS)) {
+                try {
+                    System.out.println("$ Enter start date (e.g. 07-12-2021 14:00)");
+                    LocalDateTime start = LocalDateTime.parse(reader.readLine(), formatter);
+                    System.out.println("$ Enter end date (e.g. 09-12-2021 11:00)");
+                    LocalDateTime end = LocalDateTime.parse(reader.readLine(), formatter);
+
+                    System.out.println("------------------------");
+                    List<Booking> result = this.runRead.runQuery(new GetBookingsQuery(start, end));
+                    System.out.printf("## Found %s bookings%n", result.size());
+                    for (Booking b : result) {
+                        System.out.println(b);
+                        System.out.println("------------------------");
+                    }
+                } catch (Exception e) {
+                    System.err.println(
+                        "[CLI] Something went wrong - see exception. Returning to main menu"
+                    );
+                    e.printStackTrace();
+                } finally {
+                    state = MenuState.MAIN_MENU;
+                }
+            }
+
+            while (state.equals(MenuState.BOOK)) {
+                try {
+                    System.out.println(
+                        "$ Enter room number (e.g. 375f4797-558a-4d23-a965-44553c807ea1)"
+                    );
+                    UUID roomNumber = UUID.fromString(reader.readLine());
+                    System.out.println("$ Enter start date (e.g. 07-12-2021 14:00)");
+                    LocalDateTime start = LocalDateTime.parse(reader.readLine(), formatter);
+                    System.out.println("$ Enter end date (e.g. 09-12-2021 11:00)");
+                    LocalDateTime end = LocalDateTime.parse(reader.readLine(), formatter);
+                    System.out.println("$ Enter required capacity");
+                    int capacity = Integer.parseInt(reader.readLine());
+                    System.out.println("$ Enter name");
+                    String name = reader.readLine();
+
+                    this.runWrite.runCommand(
+                        new BookRoomCommand(
+                            roomNumber,
+                            start,
+                            end,
+                            name,
+                            capacity
+                        ));
+                    System.out.println("[CLI] Command sent successfully");
+                } catch (Exception e) {
+                    System.err.println(
+                        "[CLI] Something went wrong - see exception. Returning to main menu"
+                    );
+                    e.printStackTrace();
+                } finally {
+                    state = MenuState.MAIN_MENU;
+                }
+            }
+
+            while (state.equals(MenuState.CANCEL)) {
+                try {
+                    this.runWrite.runCommand(new CancelBookingCommand(
+                        UUID.fromString(reader.readLine())
+                    ));
+                    System.out.println("[CLI] Command sent successfully");
+                } catch (IllegalArgumentException e) {
+                    System.err.println(
+                        "[CLI] Something went wrong - see exception. Returning to main menu"
+                    );
+                    e.printStackTrace();
+                } finally {
+                    state = MenuState.MAIN_MENU;
+                }
             }
         }
     }
